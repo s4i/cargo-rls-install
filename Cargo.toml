@@ -8,9 +8,9 @@ include = [
     "/Cargo.toml",
     "/README.md",
     "/LICENSE",
-    "/build.rs",
+    "/src/*.rs",
     "/src/**/*.rs",
-    "/tests/**/*.rs",
+    "/tests/*.rs",
 ]
 
 [dependencies]
@@ -30,7 +30,6 @@ name = "cargo-rls-install"
 path = "src/bin/main.rs"
 doc = false
 required-features = ["bin"]
-
 
 [features]
 bin = []
