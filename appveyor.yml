@@ -1,0 +1,18 @@
+version: 1.0.{build}
+
+platform:
+- x64
+
+environment:
+matrix:
+  - TARGET: i686-pc-windows-msvc
+  - TARGET: x86_64-pc-windows-msvc
+
+install:
+- curl -sSf -o rustup-init.exe https://win.rustup.rs
+- rustup-init.exe -y
+- set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+- if NOT "%TARGET%" == "x86_64-pc-windows-msvc" rustup target add %TARGET%
+
+build_script:
+- cmd: cargo build --release --target=%TARGET%
