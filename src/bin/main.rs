@@ -28,7 +28,7 @@ const FILE_PATH: &str = "latest.txt";
 
 fn main() {
     // Command line
-    let o = args::option::parse();
+    let o = args::args::parse();
 
     // Stable choice
     match (o.yes, o.stable) {
