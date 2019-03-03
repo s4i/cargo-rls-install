@@ -476,7 +476,7 @@ fn rust_install(v: &str, yes: bool) -> Result<()> {
         Command::new("rustup")
             .arg("install")
             .arg(v)
-            .output()
+            .status()
             .expect("Abort installation");
         println!("OK");
     } else {
@@ -523,7 +523,7 @@ fn rls_install(v: &str, yes: bool) -> Result<()> {
             .arg("rls")
             .arg("--toolchain")
             .arg(v)
-            .output()
+            .status()
             .expect("Abort installation");
         println!("OK");
 
@@ -535,7 +535,7 @@ fn rls_install(v: &str, yes: bool) -> Result<()> {
             .arg("rust-analysis")
             .arg("--toolchain")
             .arg(v)
-            .output()
+            .status()
             .expect("Abort installation");
         println!("OK");
 
@@ -547,7 +547,7 @@ fn rls_install(v: &str, yes: bool) -> Result<()> {
             .arg("rust-src")
             .arg("--toolchain")
             .arg(v)
-            .output()
+            .status()
             .expect("Abort installation");
         println!("OK");
     } else {
@@ -617,7 +617,7 @@ fn rust_set_default(v: &str, yes: bool) -> Result<()> {
         Command::new("rustup")
             .arg("default")
             .arg(v)
-            .output()
+            .status()
             .expect("Abort installation");
         println!("OK");
     } else {
