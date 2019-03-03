@@ -16,14 +16,6 @@ keywords = [
     "install",
 ]
 
-categories = [
-    "rust_language_server",
-    "rls",
-    "install",
-    "cargo",
-    "subcommand"
-]
-
 include = [
     "/Cargo.toml",
     "/README.md",

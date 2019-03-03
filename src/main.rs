@@ -68,10 +68,11 @@ fn main() {
                 println!("Cancel");
             }
         },
-        _ => {
+        (false, false, false, false) => {
             help();
             println!("Please input option.");
         }
+        _ => (),
     }
     println!("End.");
 }
