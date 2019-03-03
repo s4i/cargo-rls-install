@@ -1,0 +1,39 @@
+[package]
+name = "cargo-rls-install"
+version = "0.0.1"
+authors = ["s4i"]
+edition = "2018"
+license = "MIT"
+include = [
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE",
+    "/build.rs",
+    "/src/**/*.rs",
+    "/tests/**/*.rs",
+]
+
+[dependencies]
+regex = "1.1.0"
+reqwest = "0.9.10"
+select = "0.4.2"
+lazy_static = "1.2.0"
+structopt = { version = "0.2", default-features = false }
+failure = "0.1.5"
+
+[lib]
+name = "cargo_rls_install"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cargo-rls-install"
+path = "src/bin/main.rs"
+doc = false
+required-features = ["bin"]
+
+
+[features]
+bin = []
+default= [
+    "bin"
+]
