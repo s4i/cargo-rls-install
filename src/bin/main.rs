@@ -14,7 +14,7 @@ use std::result;
 use std::sync::Mutex;
 use std::{fs, str};
 
-mod args;
+pub mod args;
 
 lazy_static! {
     static ref BUILD_OK: Mutex<Vec<String>> = {
