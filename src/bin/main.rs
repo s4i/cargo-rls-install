@@ -1,4 +1,3 @@
-extern crate cargo_rls_install;
 #[macro_use]
 extern crate lazy_static;
 
@@ -79,7 +78,7 @@ fn main() {
                 println!("Cancel");
             }
         },
-        _ => (),
+        _ => println!("Please option"),
     }
     println!("End");
 }
