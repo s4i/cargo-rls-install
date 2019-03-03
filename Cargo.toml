@@ -4,6 +4,14 @@ version = "0.0.1"
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"
+keywords = [
+    "cli",
+    "cargo",
+    "cargo-subcommand",
+    "rust-language-server",
+    "install",
+]
+
 include = [
     "/Cargo.toml",
     "/README.md",
@@ -11,6 +19,7 @@ include = [
     "/src/*.rs",
     "/src/**/*.rs",
     "/tests/*.rs",
+    "/latest.txt",
 ]
 
 [dependencies]
@@ -28,6 +37,7 @@ path = "src/lib.rs"
 [[bin]]
 name = "cargo-rls-install"
 path = "src/bin/main.rs"
+test = false
 doc = false
 required-features = ["bin"]
 

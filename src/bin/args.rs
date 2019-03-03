@@ -1,5 +1,7 @@
+extern crate cargo_rls_install;
+extern crate structopt;
+
 pub mod option {
-    extern crate structopt;
     use structopt::StructOpt;
 
     #[derive(Debug, StructOpt)]
