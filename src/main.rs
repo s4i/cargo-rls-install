@@ -1,63 +1,23 @@
-#[macro_use]
-extern crate lazy_static;
-extern crate structopt;
+extern crate lib_rs;
+
+use lib_rs::global::PRESENT_DATE;
+use lib_rs::help;
+use lib_rs::parse_args;
+use lib_rs::BUILD_IN_TEXT;
 
 use regex::Regex;
 use select::document::Document;
 use select::predicate::{Attr, Name};
-use std::io::ErrorKind::{NotFound, Other};
-use std::io::{stdin, BufRead, BufReader, BufWriter, Read, Write};
-use std::io::{ErrorKind, ErrorKind::InvalidData, Result};
+use std::io::ErrorKind::{InvalidData, NotFound, Other};
+use std::io::{stdin, BufRead, BufReader, BufWriter, ErrorKind, Read, Result, Write};
 use std::path::Path;
-use std::process::exit;
-use std::process::Command;
-use std::result;
-use std::sync::Mutex;
-use std::{fs, str};
-
-lazy_static! {
-    static ref BUILD_OK: Mutex<Vec<String>> = {
-        let v: Vec<String> = Vec::new();
-        Mutex::new(v)
-    };
-}
-
-const FILE_PATH: &str = "latest.txt";
-
-mod args {
-    use structopt::StructOpt;
-    #[derive(Debug, StructOpt)]
-    pub enum Cargo {
-        #[structopt(
-            name = "rls-install",
-            about = "Install the Rust and Rust Language Server",
-            author = ""
-        )]
-        Install(Channel),
-    }
-
-    #[derive(Debug, StructOpt)]
-    pub struct Channel {
-        #[structopt(short, long, help = "Pre-approval Rust and RLS install command")]
-        pub yes: bool,
-        #[structopt(short, long, help = "Install stable channel Rust and RLS")]
-        pub stable: bool,
-        #[structopt(short, long, help = "Install beta channel Rust and RLS")]
-        pub beta: bool,
-        #[structopt(short, long, help = "Install nightly channel Rust and RLS")]
-        pub nightly: bool,
-    }
-
-    pub fn parse() -> Channel {
-        match StructOpt::from_args() {
-            Cargo::Install(opt) => opt,
-        }
-    }
-}
+use std::process::{exit, Command};
+use std::{fs, result, str};
 
 fn main() {
     // Command line
-    let o = args::parse();
+    // lib.rs
+    let o = parse_args();
 
     // Stable choice
     match (o.yes, o.stable) {
@@ -108,9 +68,12 @@ fn main() {
                 println!("Cancel");
             }
         },
-        _ => println!("Please option"),
+        _ => {
+            help();
+            println!("Please input option.");
+        }
     }
-    println!("End");
+    println!("End.");
 }
 
 fn select_channel() -> result::Result<String, failure::Error> {
@@ -332,7 +295,7 @@ fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
         .create(true)
         .read(true)
         .append(true)
-        .open(FILE_PATH)
+        .open(BUILD_IN_TEXT)
         .expect("Can't open file.");
 
     let reader = BufReader::new(option);
@@ -353,13 +316,13 @@ fn alive_rls(target: &str, text_line_tail: &str) -> String {
         .create(true)
         .write(true)
         .append(true)
-        .open(FILE_PATH)
+        .open(BUILD_IN_TEXT)
         .expect("Can't open file.");
 
     let mut ret = "".to_string();
     match &target.rustup_components_history() {
         Ok(()) => {
-            let vec = BUILD_OK.lock().unwrap();
+            let vec = PRESENT_DATE.lock().unwrap();
             let web_latest_date = vec.first().unwrap().to_string();
             if text_line_tail != web_latest_date {
                 let mut writer = BufWriter::new(option);
@@ -444,11 +407,13 @@ impl RustupCompenentsHistory for &str {
         // println!("{:?}", build_status);
 
         if build_status.iter().all(|x| x == "missing") {
-            println!("For RLS, unfortunate 8 days. Updating isn't possible.");
+            println!("For RLS, unfortunate 8 days.");
+            println!("It is impossible to find the latest version.");
+            println!("The following version is written in the built-in text.");
         } else {
             for (i, s) in build_status.iter().enumerate() {
                 if s == "present" {
-                    let mut vec = BUILD_OK.lock().unwrap();
+                    let mut vec = PRESENT_DATE.lock().unwrap();
                     vec.push(date[i].clone());
                 }
             }
@@ -516,9 +481,7 @@ fn rust_install(v: &str, yes: bool) -> Result<()> {
     } else {
         println!("Command execution (y/n)");
         let mut buf = String::new();
-        let cin = stdin();
-        let mut cin = BufReader::new(cin.lock());
-        cin.read_line(&mut buf)?;
+        stdin().read_line(&mut buf)?;
         if yes
             || buf.trim() == ""
             || buf.to_lowercase().trim() == "y"
@@ -589,9 +552,7 @@ fn rls_install(v: &str, yes: bool) -> Result<()> {
     } else {
         println!("Command execution (y/n)");
         let mut buf = String::new();
-        let cin = stdin();
-        let mut cin = BufReader::new(cin.lock());
-        cin.read_line(&mut buf)?;
+        stdin().read_line(&mut buf)?;
         if yes
             || buf.trim() == ""
             || buf.to_lowercase().trim() == "y"
@@ -661,9 +622,7 @@ fn rust_set_default(v: &str, yes: bool) -> Result<()> {
     } else {
         println!("Command execution (y/n)");
         let mut buf = String::new();
-        let cin = stdin();
-        let mut cin = BufReader::new(cin.lock());
-        cin.read_line(&mut buf)?;
+        stdin().read_line(&mut buf)?;
         if yes
             || buf.trim() == ""
             || buf.to_lowercase().trim() == "y"
