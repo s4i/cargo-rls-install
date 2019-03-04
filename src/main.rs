@@ -14,7 +14,7 @@ use std::path::Path;
 use std::process::{exit, Command};
 use std::{fs, result, str};
 
-const BUILD_IN_TEXT: &str = "latest.txt";
+const BUILD_IN_TEXT: &str = "latest_rls_record.txt";
 
 fn main() {
     // Command line
