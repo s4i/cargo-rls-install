@@ -1,9 +1,9 @@
 extern crate lib_rs;
 
+use lib_rs::cargo_home;
 use lib_rs::global::PRESENT_DATE;
 use lib_rs::help;
 use lib_rs::parse_args;
-use lib_rs::BUILD_IN_TEXT;
 
 use regex::Regex;
 use select::document::Document;
@@ -13,6 +13,8 @@ use std::io::{stdin, BufRead, BufReader, BufWriter, ErrorKind, Read, Result, Wri
 use std::path::Path;
 use std::process::{exit, Command};
 use std::{fs, result, str};
+
+const BUILD_IN_TEXT: &str = "latest.txt";
 
 fn main() {
     // Command line
@@ -126,6 +128,7 @@ fn nightly(yes: bool) {
 
     if text_latest_version == now_build_date {
         let version = "nightly-".to_string() + &text_latest_version;
+        println!();
         println!("    1. Rust version: OK");
         match rls_install(&version, yes) {
             Ok(()) => (),
@@ -162,6 +165,7 @@ fn nightly(yes: bool) {
 }
 
 fn left_ge_right_year_and_anyone(left: &str, right: &str) -> bool {
+    println!("{} - {}", left, right);
     let compare_date1 = left
         .split('-')
         .map(|x| x.parse().expect("parse error"))
@@ -292,14 +296,14 @@ fn read_html_file<P: AsRef<Path>>(file_path: P) -> std::io::Result<Vec<u8>> {
 }
 
 fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
-    let option = fs::OpenOptions::new()
+    let reader_opt = fs::OpenOptions::new()
         .create(true)
         .read(true)
         .append(true)
-        .open(BUILD_IN_TEXT)
+        .open(cargo_home(BUILD_IN_TEXT))
         .expect("Can't open file.");
 
-    let reader = BufReader::new(option);
+    let reader = BufReader::new(reader_opt);
 
     let mut text_vector = reader
         .lines()
@@ -313,35 +317,40 @@ fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
 }
 
 fn alive_rls(target: &str, text_line_tail: &str) -> String {
-    let option = fs::OpenOptions::new()
-        .create(true)
+    let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
-        .open(BUILD_IN_TEXT)
+        .open(cargo_home(BUILD_IN_TEXT))
         .expect("Can't open file.");
 
-    let mut ret = "".to_string();
+    let mut web_latest_date = "".to_string();
     match &target.rustup_components_history() {
         Ok(()) => {
             let vec = PRESENT_DATE.lock().unwrap();
-            let web_latest_date = vec.first().unwrap().to_string();
+            web_latest_date = vec.first().unwrap().to_string();
             if text_line_tail != web_latest_date {
-                let mut writer = BufWriter::new(option);
+                // Text write newline
+                let mut writer = BufWriter::new(writer_opt);
                 writeln!(writer, "{}", &web_latest_date).expect("File write failed.");
-            }
-            if text_line_tail == web_latest_date {
-                ret = text_line_tail.to_string();
-            } else if left_ge_right_year_and_anyone(&web_latest_date, &text_line_tail) {
-                ret = web_latest_date;
-            } else {
-                ret = text_line_tail.to_string();
             }
         }
         Err(e) => {
             eprintln!("{:?}", e);
         }
     }
-    ret.to_string()
+
+    match !text_line_tail.is_empty() {
+        true => {
+            if text_line_tail == web_latest_date {
+                return web_latest_date.to_string();
+            } else if left_ge_right_year_and_anyone(&web_latest_date, &text_line_tail) {
+                return web_latest_date.to_string();
+            } else {
+                return text_line_tail.to_string();
+            }
+        }
+        false => web_latest_date,
+    }
 }
 
 // Trait: RustupCompenentsHistory
