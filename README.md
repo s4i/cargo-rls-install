@@ -57,6 +57,7 @@ All operations are done without approval until the end.
 ## Release note
 
 | Version | Change |  
+|---------|:----------------------------------------------------------------------|
 | v1.0.0 | First release. |
 | v1.0.1 | Minor change. |  
 | v1.0.2 | Minor change. |  
