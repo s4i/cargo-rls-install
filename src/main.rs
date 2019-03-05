@@ -15,7 +15,7 @@ use std::process::{exit, Command};
 use std::{fs, result, str};
 
 // Version write: Cargo.toml and here
-const APP_NAME: &str = "cargo-rls-install-1.0.7";
+const APP_NAME: &str = "cargo-rls-install-1.0.8";
 const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {

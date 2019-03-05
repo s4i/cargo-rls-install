@@ -19,6 +19,11 @@ For Linux, it is necessary to install OpenSSL for installation.
 # Ubuntu or Debian
 sudo apt install libssl-dev
 
+# WSL(Windows Subsystem for Linux)
+sudo apt install libssl-dev
+sudo apt install build-essential
+sudo apt install pkg-config
+
 # RedHut
 sudo yum install openssl-devel
 
@@ -71,13 +76,14 @@ All operations are done without approval until the end.
 
 ## Release note
 
-| Version | Change |  
-|---------|:----------------------------------------------------------------------|
-| v1.0.0 | First release. |
-| v1.0.1 | Minor change. |  
-| v1.0.2 | Minor change. |  
-| v1.0.3 | Fix fatal bug. Parse error always occurs in initial operation. |  
-| v1.0.4 | Create latest.txt in .cargo. |  
-| v1.0.5 | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo. |  
-| v1.0.6 | README.md fix tables. |  
-| v1.0.7 | Fixed bug of v1.0.3 was not fixed. |  
+| Version | Change                                                                                          |
+| ------- | :---------------------------------------------------------------------------------------------- |
+| v1.0.0  | First release.                                                                                  |
+| v1.0.1  | Minor change.                                                                                   |
+| v1.0.2  | Minor change.                                                                                   |
+| v1.0.3  | Fix fatal bug. Parse error always occurs in initial operation.                                  |
+| v1.0.4  | Create latest.txt in .cargo.                                                                    |
+| v1.0.5  | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo. |
+| v1.0.6  | README.md fix tables.                                                                           |
+| v1.0.7  | Fixed bug of v1.0.3 was not fixed.                                                              |
+| v1.0.8  | Add description for installation with wsl in README.md.                                         |
