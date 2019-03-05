@@ -14,3 +14,4 @@ pub mod global;
 pub use global::PRESENT_DATE;
 pub mod cargo_home;
 pub use cargo_home::cargo_home;
+pub use failure::*;

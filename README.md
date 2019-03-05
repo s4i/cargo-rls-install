@@ -13,14 +13,14 @@ nor did I feel like using Rust.
 
 ## Usage
 
-```
-$ cargo rls-install [FLAGS]
+```bash
+cargo rls-install [FLAGS]
 ```
 
 ### Example1
 
-```
-$ cargo rls-install -n
+```bash
+cargo rls-install -n
 ```
 
 Three operations are executed by the above command.
@@ -33,8 +33,8 @@ Before executing each operation, ask whether to execute it.
 
 ### Example2
 
-```
-$ cargo rls-install -ny
+```bash
+cargo rls-install -ny
 ```
 
 All operations are done without approval until the end.
@@ -53,3 +53,14 @@ All operations are done without approval until the end.
 ## Special thanks
 
 - mexus
+
+## Release note
+
+| Version | Change |  
+| v1.0.0 | First release. |
+| v1.0.1 | Minor change. |  
+| v1.0.2 | Minor change. |  
+| v1.0.3 | Fix fatal bug. Parse error always occurs in initial operation. |  
+| v1.0.4 | Create latest.txt in .cargo. |  
+| v1.0.5 | I set the installation location of latest.txt in the cargo-rls-install |  
+|:-------| source file in .cargo. |  

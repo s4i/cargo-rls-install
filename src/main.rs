@@ -14,7 +14,9 @@ use std::path::Path;
 use std::process::{exit, Command};
 use std::{fs, result, str};
 
-const BUILD_IN_TEXT: &str = "latest_rls_record.txt";
+// Version write: Cargo.toml and here
+const APP_NAME: &str = "cargo-rls-install-1.0.5";
+const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
     // Command line
@@ -84,7 +86,7 @@ fn select_channel() -> result::Result<String, failure::Error> {
     println!("[stable/beta/nightly]");
     let mut buf = String::new();
     stdin().read_line(&mut buf)?;
-    Ok(buf.to_lowercase().trim().to_string())
+    Ok(buf.to_lowercase().trim().to_owned())
 }
 
 fn nightly(yes: bool) {
@@ -94,7 +96,7 @@ fn nightly(yes: bool) {
     // let mut buf = vec![];
     // match read_html_file(file_path) {
     //     Ok(v) => buf = v,
-    //     Err(e) => println!("{}", e.to_string()),
+    //     Err(e) => println!("{}", e.to_owned()),
     // }
     // file_data = str::from_utf8(&buf).unwrap();
     // println!("{:?}", file_data);
@@ -105,7 +107,7 @@ fn nightly(yes: bool) {
 
     /* Switch web pages */
     let mut url: &str =
-        &("https://mexus.github.io/rustup-components-history/".to_string() + &platform_name);
+        &("https://mexus.github.io/rustup-components-history/".to_owned() + &platform_name);
     if platform_name == "x86_64-unknown-linux-gnu" {
         url = "https://mexus.github.io/rustup-components-history/";
     }
@@ -114,7 +116,7 @@ fn nightly(yes: bool) {
     let mut text_latest_version;
     match latest_text_line_tail() {
         Ok(version) => text_latest_version = version,
-        Err(_e) => text_latest_version = "".to_string(),
+        Err(_e) => text_latest_version = "".to_owned(),
     }
 
     /* Latest version description */
@@ -127,7 +129,7 @@ fn nightly(yes: bool) {
     }
 
     if text_latest_version == now_build_date {
-        let version = "nightly-".to_string() + &text_latest_version;
+        let version = "nightly-".to_owned() + &text_latest_version;
         println!();
         println!("    1. Rust version: OK");
         match rls_install(&version, yes) {
@@ -146,7 +148,7 @@ fn nightly(yes: bool) {
                 // If you have the latest version, recommend installing
                 match left_ge_right_year_and_anyone(&text_latest_version, &now_build_date) {
                     true => print_rust_and_rls_install(
-                        &("nightly-".to_string() + &text_latest_version),
+                        &("nightly-".to_owned() + &text_latest_version),
                         yes,
                     ),
                     false => {}
@@ -154,7 +156,7 @@ fn nightly(yes: bool) {
             }
             // Rust and RLS aren't installed on the local system
             (false, true) => {
-                print_rust_and_rls_install(&("nightly-".to_string() + &text_latest_version), yes)
+                print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest_version), yes)
             }
             // Text data empty
             _ => {
@@ -165,7 +167,9 @@ fn nightly(yes: bool) {
 }
 
 fn left_ge_right_year_and_anyone(left: &str, right: &str) -> bool {
-    println!("{} - {}", left, right);
+    println!("Search new version: nightly-{}", left);
+    println!("Current installed version: nightly-{}", right);
+
     let compare_date1 = left
         .split('-')
         .map(|x| x.parse().expect("parse error"))
@@ -224,7 +228,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
     let re_nightly = Regex::new(r"\b.+nightly-").unwrap();
 
     // Get platform name
-    let mut platform_name = "".to_string();
+    let mut platform_name = "".to_owned();
 
     match (
         re_nightly.is_match(path),
@@ -237,9 +241,9 @@ fn sysroot_regex(path: &str) -> (String, String) {
 
             let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
-            let mut now_build_date = "".to_string();
+            let mut now_build_date = "".to_owned();
             if re_date.is_match(&no_head) {
-                now_build_date = re_date.find(&no_head).unwrap().as_str().to_string();
+                now_build_date = re_date.find(&no_head).unwrap().as_str().to_owned();
             }
 
             match platform(&no_head) {
@@ -256,7 +260,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
                 Ok(name) => platform_name = name,
                 Err(_e) => (),
             }
-            return ("".to_string(), platform_name);
+            return ("".to_owned(), platform_name);
         }
         (false, false, true) => {
             let no_head = re_stable.replace(path, "");
@@ -266,11 +270,11 @@ fn sysroot_regex(path: &str) -> (String, String) {
                 Ok(name) => platform_name = name,
                 Err(_e) => (),
             }
-            return ("".to_string(), platform_name);
+            return ("".to_owned(), platform_name);
         }
         _ => {
             eprintln!("Other Error");
-            return ("".to_string(), "".to_string());
+            return ("".to_owned(), "".to_owned());
         }
     }
 }
@@ -279,8 +283,8 @@ fn platform(no_head: &str) -> result::Result<String, ErrorKind> {
     let re_date_plus_hyphen = Regex::new(r"\d{4}-\d{2}-\d{2}-").unwrap();
     match re_date_plus_hyphen.is_match(no_head) {
         true => {
-            let platform_name = re_date_plus_hyphen.replace(no_head, "").to_string();
-            Ok(platform_name)
+            let platform_name = re_date_plus_hyphen.replace(no_head, "");
+            Ok(platform_name.to_string())
         }
         false => Err(Other), // No matching. <YYYY-MM-DD>
     }
@@ -300,7 +304,7 @@ fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
         .create(true)
         .read(true)
         .append(true)
-        .open(cargo_home(BUILD_IN_TEXT))
+        .open(cargo_home(APP_NAME, BUILD_IN_TEXT_NAME).expect("cargo_home_func"))
         .expect("Can't open file.");
 
     let reader = BufReader::new(reader_opt);
@@ -320,14 +324,14 @@ fn alive_rls(target: &str, text_line_tail: &str) -> String {
     let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
-        .open(cargo_home(BUILD_IN_TEXT))
+        .open(cargo_home(APP_NAME, BUILD_IN_TEXT_NAME).expect("cargo_home_func"))
         .expect("Can't open file.");
 
-    let mut web_latest_date = "".to_string();
+    let mut web_latest_date = "".to_owned();
     match &target.rustup_components_history() {
         Ok(()) => {
             let vec = PRESENT_DATE.lock().unwrap();
-            web_latest_date = vec.first().unwrap().to_string();
+            web_latest_date = vec.first().unwrap().to_owned();
             if text_line_tail != web_latest_date {
                 // Text write newline
                 let mut writer = BufWriter::new(writer_opt);
@@ -342,11 +346,11 @@ fn alive_rls(target: &str, text_line_tail: &str) -> String {
     match !text_line_tail.is_empty() {
         true => {
             if text_line_tail == web_latest_date {
-                return web_latest_date.to_string();
+                return web_latest_date.to_owned();
             } else if left_ge_right_year_and_anyone(&web_latest_date, &text_line_tail) {
-                return web_latest_date.to_string();
+                return web_latest_date.to_owned();
             } else {
-                return text_line_tail.to_string();
+                return text_line_tail.to_owned();
             }
         }
         false => web_latest_date,
