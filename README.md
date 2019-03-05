@@ -28,7 +28,7 @@ sudo apt install pkg-config
 sudo yum install openssl-devel
 
 # RedHut(Fedora etc.)
-sudo dnf install openssl-devel
+sudo dnf install openssl
 ```
 
 ## Usage
