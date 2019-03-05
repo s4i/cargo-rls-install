@@ -64,3 +64,4 @@ All operations are done without approval until the end.
 | v1.0.3 | Fix fatal bug. Parse error always occurs in initial operation. |  
 | v1.0.4 | Create latest.txt in .cargo. |  
 | v1.0.5 | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo.|  
+| v1.0.6 | README.md fix tables |  
