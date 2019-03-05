@@ -15,7 +15,7 @@ use std::process::{exit, Command};
 use std::{fs, result, str};
 
 // Version write: Cargo.toml and here
-const APP_NAME: &str = "cargo-rls-install-1.0.6";
+const APP_NAME: &str = "cargo-rls-install-1.0.7";
 const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
@@ -114,8 +114,8 @@ fn nightly(yes: bool) {
 
     // get text version
     let mut text_latest_version;
-    match latest_text_line_tail() {
-        Ok(version) => text_latest_version = version,
+    match latest_text_last_line() {
+        Ok(version) => text_latest_version = version.trim().to_owned(),
         Err(_e) => text_latest_version = "".to_owned(),
     }
 
@@ -299,9 +299,8 @@ fn read_html_file<P: AsRef<Path>>(file_path: P) -> std::io::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
+fn latest_text_last_line() -> result::Result<String, ErrorKind> {
     let reader_opt = fs::OpenOptions::new()
-        .create(true)
         .read(true)
         .append(true)
         .open(cargo_home(APP_NAME, BUILD_IN_TEXT_NAME).expect("cargo_home_func"))
@@ -320,7 +319,7 @@ fn latest_text_line_tail() -> result::Result<String, ErrorKind> {
     }
 }
 
-fn alive_rls(target: &str, text_line_tail: &str) -> String {
+fn alive_rls(target: &str, text_latest_version: &str) -> String {
     let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
@@ -332,7 +331,7 @@ fn alive_rls(target: &str, text_line_tail: &str) -> String {
         Ok(()) => {
             let vec = PRESENT_DATE.lock().unwrap();
             web_latest_date = vec.first().unwrap().to_owned();
-            if text_line_tail != web_latest_date {
+            if text_latest_version != web_latest_date {
                 // Text write newline
                 let mut writer = BufWriter::new(writer_opt);
                 writeln!(writer, "{}", &web_latest_date).expect("File write failed.");
@@ -343,14 +342,14 @@ fn alive_rls(target: &str, text_line_tail: &str) -> String {
         }
     }
 
-    match !text_line_tail.is_empty() {
+    match !text_latest_version.is_empty() {
         true => {
-            if text_line_tail == web_latest_date {
+            if text_latest_version == web_latest_date {
                 return web_latest_date.to_owned();
-            } else if left_ge_right_year_and_anyone(&web_latest_date, &text_line_tail) {
+            } else if left_ge_right_year_and_anyone(&web_latest_date, &text_latest_version) {
                 return web_latest_date.to_owned();
             } else {
-                return text_line_tail.to_owned();
+                return text_latest_version.to_owned();
             }
         }
         false => web_latest_date,

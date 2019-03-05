@@ -11,6 +11,21 @@ updates everyday,  and scrapes it.
 If we had no mexus page in the first place, we would have never made Cargo subcommand,  
 nor did I feel like using Rust.
 
+## Preparing for installation (Linux only)
+
+For Linux, it is necessary to install OpenSSL for installation.
+
+```bash
+# Ubuntu or Debian
+sudo apt install libssl-dev
+
+# RedHut
+sudo yum install openssl-devel
+
+# RedHut(Fedora etc.)
+sudo dnf install openssl-devel
+```
+
 ## Usage
 
 ```bash
@@ -63,5 +78,6 @@ All operations are done without approval until the end.
 | v1.0.2 | Minor change. |  
 | v1.0.3 | Fix fatal bug. Parse error always occurs in initial operation. |  
 | v1.0.4 | Create latest.txt in .cargo. |  
-| v1.0.5 | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo.|  
-| v1.0.6 | README.md fix tables |  
+| v1.0.5 | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo. |  
+| v1.0.6 | README.md fix tables. |  
+| v1.0.7 | Fixed bug of v1.0.3 was not fixed. |  
