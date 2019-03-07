@@ -5,13 +5,14 @@ extern crate select;
 extern crate structopt;
 #[macro_use]
 extern crate lazy_static;
+// extern crate cargo_toml;
 extern crate dirs;
 
+pub mod global;
 pub mod options;
+pub mod own_dir;
+
+pub use global::PRESENT_DATE;
 pub use options::help;
 pub use options::parse_args;
-pub mod global;
-pub use global::PRESENT_DATE;
-pub mod cargo_home;
-pub use cargo_home::cargo_home;
-pub use failure::*;
+pub use own_dir::latest_txt_path;

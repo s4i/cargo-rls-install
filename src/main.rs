@@ -1,10 +1,5 @@
-extern crate lib_rs;
-
-use lib_rs::cargo_home;
-use lib_rs::global::PRESENT_DATE;
-use lib_rs::help;
-use lib_rs::parse_args;
-
+extern crate cargo_rls_install;
+use cargo_rls_install::{global::PRESENT_DATE, help, latest_txt_path, parse_args};
 use regex::Regex;
 use select::document::Document;
 use select::predicate::{Attr, Name};
@@ -15,7 +10,7 @@ use std::process::{exit, Command};
 use std::{fs, result, str};
 
 // Version write: Cargo.toml and here
-const APP_NAME: &str = "cargo-rls-install-1.0.9";
+const APP_SRC_DIR: &str = "cargo-rls-install-1.0.10";
 const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
@@ -113,11 +108,10 @@ fn nightly(yes: bool) {
     }
 
     // get text version
-    let mut text_latest_version;
-    match latest_text_last_line() {
-        Ok(version) => text_latest_version = version.trim().to_owned(),
-        Err(_e) => text_latest_version = "".to_owned(),
-    }
+    let mut text_latest_version = match latest_text_last_line() {
+        Ok(version) => version.trim().to_owned(),
+        Err(_e) => "".to_owned(),
+    };
 
     /* Latest version description */
     if !url.is_empty() {
@@ -228,8 +222,6 @@ fn sysroot_regex(path: &str) -> (String, String) {
     let re_nightly = Regex::new(r"\b.+nightly-").unwrap();
 
     // Get platform name
-    let mut platform_name = "".to_owned();
-
     match (
         re_nightly.is_match(path),
         re_beta.is_match(path),
@@ -241,42 +233,42 @@ fn sysroot_regex(path: &str) -> (String, String) {
 
             let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
-            let mut now_build_date = "".to_owned();
-            if re_date.is_match(&no_head) {
-                now_build_date = re_date.find(&no_head).unwrap().as_str().to_owned();
-            }
+            let now_build_date = match re_date.is_match(&no_head) {
+                true => re_date.find(&no_head).unwrap().as_str().to_owned(),
+                false => "".to_owned(),
+            };
 
-            match platform(&no_head) {
-                Ok(name) => platform_name = name,
-                Err(_e) => {}
-            }
+            let platform_name = match platform(&no_head) {
+                Ok(name) => name,
+                Err(_e) => "".to_owned(),
+            };
             return (now_build_date, platform_name);
         }
         (false, true, false) => {
             let no_head = re_beta.replace(path, "");
 
             println!("Default use Rust channel: Beta");
-            match platform(&no_head) {
-                Ok(name) => platform_name = name,
-                Err(_e) => (),
-            }
+            let platform_name = match platform(&no_head) {
+                Ok(name) => name,
+                Err(_e) => "".to_owned(),
+            };
             return ("".to_owned(), platform_name);
         }
         (false, false, true) => {
             let no_head = re_stable.replace(path, "");
 
             println!("Default use Rust channel: Stable");
-            match platform(&no_head) {
-                Ok(name) => platform_name = name,
-                Err(_e) => (),
-            }
+            let platform_name = match platform(&no_head) {
+                Ok(name) => name,
+                Err(_e) => "".to_owned(),
+            };
             return ("".to_owned(), platform_name);
         }
         _ => {
             eprintln!("Other Error");
             return ("".to_owned(), "".to_owned());
         }
-    }
+    };
 }
 
 fn platform(no_head: &str) -> result::Result<String, ErrorKind> {
@@ -303,7 +295,7 @@ fn latest_text_last_line() -> result::Result<String, ErrorKind> {
     let reader_opt = fs::OpenOptions::new()
         .read(true)
         .append(true)
-        .open(cargo_home(APP_NAME, BUILD_IN_TEXT_NAME).expect("cargo_home_func"))
+        .open(latest_txt_path(APP_SRC_DIR, BUILD_IN_TEXT_NAME))
         .expect("Can't open file.");
 
     let reader = BufReader::new(reader_opt);
@@ -323,7 +315,7 @@ fn alive_rls(target: &str, text_latest_version: &str) -> String {
     let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
-        .open(cargo_home(APP_NAME, BUILD_IN_TEXT_NAME).expect("cargo_home_func"))
+        .open(latest_txt_path(APP_SRC_DIR, BUILD_IN_TEXT_NAME))
         .expect("Can't open file.");
 
     let mut web_latest_date = "".to_owned();
@@ -370,7 +362,7 @@ impl RustupCompenentsHistory for &str {
         let url = self as &str;
         match Self::read_html_document(url) {
             Ok(document) => Self::scraping(document),
-            Err(_e) => {} // "InvalidData" not print
+            Err(_e) => (), // "InvalidData" not print
         }
         Ok(())
     }
@@ -419,15 +411,18 @@ impl RustupCompenentsHistory for &str {
 
         // println!("{:?}", build_status);
 
-        if build_status.iter().all(|x| x == "missing") {
-            println!("For RLS, unfortunate 8 days.");
-            println!("It is impossible to find the latest version.");
-            println!("The following version is written in the built-in text.");
-        } else {
-            for (i, s) in build_status.iter().enumerate() {
-                if s == "present" {
-                    let mut vec = PRESENT_DATE.lock().unwrap();
-                    vec.push(date[i].clone());
+        match build_status.iter().all(|x| x == "missing") {
+            true => {
+                println!("For RLS, unfortunate 8 days.");
+                println!("It is impossible to find the latest version.");
+                println!("The following version is written in the built-in text.");
+            }
+            false => {
+                for (i, s) in build_status.iter().enumerate() {
+                    if s == "present" {
+                        let mut vec = PRESENT_DATE.lock().unwrap();
+                        vec.push(date[i].clone());
+                    }
                 }
             }
         }
