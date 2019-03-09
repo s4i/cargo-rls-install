@@ -1,4 +1,4 @@
-use dirs::home_dir;
+// use dirs::home_dir;
 use failure::err_msg;
 use regex::Regex;
 use std::fs;
@@ -16,8 +16,9 @@ pub fn latest_txt_path(app_name: &str, latest_file: &str) -> PathBuf {
 
 fn cargo_home() -> PathBuf {
     let mut path = PathBuf::new();
-    path.push(home_dir().expect("Not found home directory."));
-    path.push(".cargo"); // $home/.cargo
+    // path.push(home_dir().expect("Not found home directory."));
+    // path.push(".cargo"); // $home/.cargo
+    path.push(env!("CARGO_HOME"));
     path.push("registry");
     path.push("src");
     if path.is_dir() {
