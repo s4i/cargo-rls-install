@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rls-install"
-version = "1.0.10" # Version write: main.rs and here
+version = "1.0.11" # Version write: main.rs and here
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"

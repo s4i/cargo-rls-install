@@ -10,7 +10,7 @@ use std::process::{exit, Command};
 use std::{fs, result, str};
 
 // Version write: Cargo.toml and here
-const APP_SRC_DIR: &str = "cargo-rls-install-1.0.10";
+const APP_SRC_DIR: &str = "cargo-rls-install-1.0.11";
 const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
@@ -102,9 +102,9 @@ fn nightly(yes: bool) {
 
     /* Switch web pages */
     let mut url: &str =
-        &("https://mexus.github.io/rustup-components-history/".to_owned() + &platform_name);
+        &("https://rust-lang.github.io/rustup-components-history/".to_owned() + &platform_name);
     if platform_name == "x86_64-unknown-linux-gnu" {
-        url = "https://mexus.github.io/rustup-components-history/";
+        url = "https://rust-lang.github.io/rustup-components-history/";
     }
 
     // get text version
