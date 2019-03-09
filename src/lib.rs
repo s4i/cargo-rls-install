@@ -12,7 +12,6 @@ pub mod global;
 pub mod options;
 pub mod own_dir;
 
-pub use global::PRESENT_DATE;
 pub use options::help;
 pub use options::parse_args;
 pub use own_dir::latest_txt_path;
