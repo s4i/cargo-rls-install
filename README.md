@@ -82,17 +82,18 @@ All operations are done without approval until the end.
 
 ## Release note
 
-| Version | Change                                                                                                                |
-| ------- | :-------------------------------------------------------------------------------------------------------------------- |
-| v1.0.11 | The repository "rustup-components-history" was incorporated into Rust's official Repository, so the URL was changed." |
-| v1.0.10 | Add installation Instructions.                                                                                        |
-| v1.0.9  | README.md: There was an error in the description about dnf                                                            |
-| v1.0.8  | Add description for installation with wsl in README.md.                                                               |
-| v1.0.7  | Fixed bug of v1.0.3 was not fixed.                                                                                    |
-| v1.0.6  | README.md: fix tables.                                                                                                |
-| v1.0.5  | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo.                       |
-| v1.0.4  | Create latest.txt in .cargo.                                                                                          |
-| v1.0.3  | Fix fatal bug. Parse error always occurs in initial operation.                                                        |
-| v1.0.2  | Minor change.                                                                                                         |
-| v1.0.1  | Minor change.                                                                                                         |
-| v1.0.0  | First release.                                                                                                        |
+| Version | Change                                                                                                               |
+| ------- | :------------------------------------------------------------------------------------------------------------------- |
+| v1.0.12 | Version acquisition by env!("CARGO_PKG_VERSION").                                                                    |
+| v1.0.11 | The repository "rustup-components-history" was incorporated into Rust's official Repository, so the URL was changed. |
+| v1.0.10 | Add installation Instructions.                                                                                       |
+| v1.0.9  | README.md: There was an error in the description about dnf                                                           |
+| v1.0.8  | Add description for installation with wsl in README.md.                                                              |
+| v1.0.7  | Fixed bug of v1.0.3 was not fixed.                                                                                   |
+| v1.0.6  | README.md: fix tables.                                                                                               |
+| v1.0.5  | I set the installation location of latest.txt in the cargo-rls-install source folder in .cargo.                      |
+| v1.0.4  | Create latest.txt in .cargo.                                                                                         |
+| v1.0.3  | Fix fatal bug. Parse error always occurs in initial operation.                                                       |
+| v1.0.2  | Minor change.                                                                                                        |
+| v1.0.1  | Minor change.                                                                                                        |
+| v1.0.0  | First release.                                                                                                       |
