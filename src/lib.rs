@@ -15,3 +15,12 @@ pub mod own_dir;
 pub use options::help;
 pub use options::parse_args;
 pub use own_dir::latest_txt_path;
+
+pub fn app_src_dir() -> String {
+    format!(
+        "{}{}{}",
+        "cargo-rls-install",
+        '-',
+        env!("CARGO_PKG_VERSION")
+    )
+}

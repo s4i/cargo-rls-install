@@ -1,5 +1,5 @@
 extern crate cargo_rls_install;
-use cargo_rls_install::{global::PRESENT_DATE, help, latest_txt_path, parse_args};
+use cargo_rls_install::{app_src_dir, global::PRESENT_DATE, help, latest_txt_path, parse_args};
 use regex::Regex;
 use select::document::Document;
 use select::predicate::{Attr, Name};
@@ -9,8 +9,6 @@ use std::path::Path;
 use std::process::{exit, Command};
 use std::{fs, result, str};
 
-// Version write: Cargo.toml and here
-const APP_SRC_DIR: &str = "cargo-rls-install-1.0.11";
 const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
@@ -295,7 +293,7 @@ fn latest_text_last_line() -> result::Result<String, ErrorKind> {
     let reader_opt = fs::OpenOptions::new()
         .read(true)
         .append(true)
-        .open(latest_txt_path(APP_SRC_DIR, BUILD_IN_TEXT_NAME))
+        .open(latest_txt_path(&app_src_dir(), BUILD_IN_TEXT_NAME))
         .expect("Can't open file.");
 
     let reader = BufReader::new(reader_opt);
@@ -315,7 +313,7 @@ fn alive_rls(target: &str, text_latest_version: &str) -> String {
     let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
-        .open(latest_txt_path(APP_SRC_DIR, BUILD_IN_TEXT_NAME))
+        .open(latest_txt_path(&app_src_dir(), BUILD_IN_TEXT_NAME))
         .expect("Can't open file.");
 
     let mut web_latest_date = "".to_owned();
