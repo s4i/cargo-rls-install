@@ -19,11 +19,12 @@ keywords = [
 
 include = [
     "/Cargo.toml",
-    "/README.md",
+    "/latest.txt",
     "/LICENSE",
+    "/README.md",
+    "/RELEASE.md",
     "/src/*.rs",
     "/tests/*.rs",
-    "/latest.txt",
 ]
 
 [dependencies]
