@@ -40,9 +40,9 @@ matrix:
             - binutils-dev
             - cmake
 
-script: |
-  cargo build --verbose &&
-  cargo test  --verbose
+script:
+  - cargo build --verbose
+  - cargo test  --verbose
 branches:
   only:
     - master
