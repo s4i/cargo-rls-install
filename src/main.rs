@@ -99,11 +99,11 @@ fn nightly(yes: bool) {
     let (now_build_date, platform_name) = sysroot_regex(&console_stdout);
 
     /* Switch web pages */
-    let mut url: &str =
-        &("https://rust-lang.github.io/rustup-components-history/".to_owned() + &platform_name);
-    if platform_name == "x86_64-unknown-linux-gnu" {
-        url = "https://rust-lang.github.io/rustup-components-history/";
-    }
+    let url = if platform_name == "x86_64-unknown-linux-gnu" {
+        "https://rust-lang.github.io/rustup-components-history/".to_owned()
+    } else {
+        "https://rust-lang.github.io/rustup-components-history/".to_owned() + &platform_name
+    };
 
     // get text version
     let mut text_latest_version = match latest_text_last_line() {
@@ -114,7 +114,7 @@ fn nightly(yes: bool) {
     /* Latest version description */
     if !url.is_empty() {
         /* URL mode */
-        text_latest_version = alive_rls(url, &text_latest_version);
+        text_latest_version = alive_rls(&url, &text_latest_version);
     } else if !file_data.is_empty() {
         /* Readfile mode */
         text_latest_version = alive_rls(file_data, &text_latest_version);
@@ -138,12 +138,8 @@ fn nightly(yes: bool) {
             (false, false) => {
                 // Local rust version date(nightly-{date}) compare
                 // If you have the latest version, recommend installing
-                match left_ge_right_year_and_anyone(&text_latest_version, &now_build_date) {
-                    true => print_rust_and_rls_install(
-                        &("nightly-".to_owned() + &text_latest_version),
-                        yes,
-                    ),
-                    false => {}
+                if left_ge_right_year_and_anyone(&text_latest_version, &now_build_date) {
+                    print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest_version), yes)
                 }
             }
             // Rust and RLS aren't installed on the local system
@@ -171,9 +167,9 @@ fn left_ge_right_year_and_anyone(left: &str, right: &str) -> bool {
         .map(|x| x.parse().expect("parse error"))
         .collect::<Vec<i32>>(); // [2019 ,2 ,24]
     let mut decision = (false, false, false); // YYYY | MM || DD
-    let mut cnt: usize = 0;
-    for (i, j) in compare_date1.iter().zip(compare_date2.iter()) {
-        if i >= j {
+
+    for (cnt, item) in compare_date1.iter().zip(compare_date2.iter()).enumerate() {
+        if item.0 >= item.1 {
             match cnt {
                 0 => decision.0 = true,
                 1 => decision.1 = true,
@@ -181,8 +177,8 @@ fn left_ge_right_year_and_anyone(left: &str, right: &str) -> bool {
                 _ => {}
             }
         }
-        cnt += 1;
     }
+
     match decision {
         (true, true, true) => true,
         (true, true, false) => true,
@@ -205,13 +201,12 @@ fn local_system_rust_version() -> String {
         .output()
         .expect("failed to execute");
 
-    let forced_linux_path_format = String::from_utf8(sysroot.stdout)
+    // forced linux path format
+    String::from_utf8(sysroot.stdout)
         .expect("Encode failed")
         .trim_start_matches('/')
         .trim_end()
-        .replace("\\", "/");
-
-    forced_linux_path_format
+        .replace("\\", "/")
 }
 
 fn sysroot_regex(path: &str) -> (String, String) {
@@ -231,16 +226,17 @@ fn sysroot_regex(path: &str) -> (String, String) {
 
             let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
-            let now_build_date = match re_date.is_match(&no_head) {
-                true => re_date.find(&no_head).unwrap().as_str().to_owned(),
-                false => "".to_owned(),
+            let now_build_date = if re_date.is_match(&no_head) {
+                re_date.find(&no_head).unwrap().as_str().to_owned()
+            } else {
+                "".to_owned()
             };
 
             let platform_name = match platform(&no_head) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
             };
-            return (now_build_date, platform_name);
+            (now_build_date, platform_name)
         }
         (false, true, false) => {
             let no_head = re_beta.replace(path, "");
@@ -250,7 +246,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
             };
-            return ("".to_owned(), platform_name);
+            ("".to_owned(), platform_name)
         }
         (false, false, true) => {
             let no_head = re_stable.replace(path, "");
@@ -260,23 +256,21 @@ fn sysroot_regex(path: &str) -> (String, String) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
             };
-            return ("".to_owned(), platform_name);
+            ("".to_owned(), platform_name)
         }
         _ => {
             eprintln!("Other Error");
-            return ("".to_owned(), "".to_owned());
+            ("".to_owned(), "".to_owned())
         }
-    };
+    }
 }
 
 fn platform(no_head: &str) -> result::Result<String, ErrorKind> {
     let re_date_plus_hyphen = Regex::new(r"\d{4}-\d{2}-\d{2}-").unwrap();
-    match re_date_plus_hyphen.is_match(no_head) {
-        true => {
-            let platform_name = re_date_plus_hyphen.replace(no_head, "");
-            Ok(platform_name.to_string())
-        }
-        false => Err(Other), // No matching. <YYYY-MM-DD>
+    if re_date_plus_hyphen.is_match(no_head) {
+        Ok(re_date_plus_hyphen.replace(no_head, "").to_string())
+    } else {
+        Err(Other) // No matching. <YYYY-MM-DD>
     }
 }
 
@@ -300,7 +294,7 @@ fn latest_text_last_line() -> result::Result<String, ErrorKind> {
 
     let mut text_vector = reader
         .lines()
-        .filter_map(|line| line.ok()) // None case validate
+        .filter_map(std::result::Result::ok) // None case validate
         .collect::<Vec<_>>();
 
     match text_vector.len() {
@@ -332,17 +326,17 @@ fn alive_rls(target: &str, text_latest_version: &str) -> String {
         }
     }
 
-    match !text_latest_version.is_empty() {
-        true => {
-            if text_latest_version == web_latest_date {
-                return web_latest_date.to_owned();
-            } else if left_ge_right_year_and_anyone(&web_latest_date, &text_latest_version) {
-                return web_latest_date.to_owned();
-            } else {
-                return text_latest_version.to_owned();
-            }
+    if !text_latest_version.is_empty() {
+        if text_latest_version == web_latest_date {
+            return web_latest_date.to_owned();
         }
-        false => web_latest_date,
+        if left_ge_right_year_and_anyone(&web_latest_date, &text_latest_version) {
+            web_latest_date.to_owned()
+        } else {
+            text_latest_version.to_owned()
+        }
+    } else {
+        web_latest_date
     }
 }
 
@@ -396,10 +390,11 @@ impl RustupCompenentsHistory for &str {
 
         let build_status = document
             .find(Attr("scope", "row"))
-            .filter(|x| x.text() == "rls")
+            // .filter(|x| x.text() == "rls")
+            // .next()
+            .find(|x| x.text() == "rls")
             // .map(|tag| tag.text())
             // .collect::<Vec<_>>(); // result -> "rls"
-            .next()
             .expect("iter to string failed.")
             .parent()
             .unwrap()
@@ -409,18 +404,15 @@ impl RustupCompenentsHistory for &str {
 
         // println!("{:?}", build_status);
 
-        match build_status.iter().all(|x| x == "missing") {
-            true => {
-                println!("For RLS, unfortunate 8 days.");
-                println!("It is impossible to find the latest version.");
-                println!("The following version is written in the built-in text.");
-            }
-            false => {
-                for (i, s) in build_status.iter().enumerate() {
-                    if s == "present" {
-                        let mut vec = PRESENT_DATE.lock().unwrap();
-                        vec.push(date[i].clone());
-                    }
+        if build_status.iter().all(|x| x == "missing") {
+            println!("For RLS, unfortunate 8 days.");
+            println!("It is impossible to find the latest version.");
+            println!("The following version is written in the built-in text.");
+        } else {
+            for (i, s) in build_status.iter().enumerate() {
+                if s == "present" {
+                    let mut vec = PRESENT_DATE.lock().unwrap();
+                    vec.push(date[i].clone());
                 }
             }
         }
