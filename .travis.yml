@@ -1,9 +1,9 @@
 language: rust
 cache: cargo
 rust:
-  - stable
   - beta
   - nightly
+  # - stable
 
 matrix:
   fast_finish: true
@@ -28,9 +28,9 @@ matrix:
           cargo build    --verbose &&
           cargo coverage --verbose &&
           bash <(curl -s https://codecov.io/bash) -s target/kcov
-        - |
-          cargo doc --verbose &&
-          cargo doc-upload
+        # - |
+        #   cargo doc --verbose &&
+        #   cargo doc-upload
       addons: # required for kcov
         apt:
           packages:
@@ -43,6 +43,7 @@ matrix:
 script:
   - cargo build --verbose
   - cargo test  --verbose
+  # - cargo doc --verbose
 branches:
   only:
     - master
