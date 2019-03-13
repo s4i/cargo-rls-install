@@ -1,10 +1,7 @@
 extern crate cargo_rls_install;
-
 use regex::Regex;
-
-use std::io::{BufRead, BufReader};
-
 use std::fs;
+use std::io::{BufRead, BufReader};
 use std::process::exit;
 
 #[test]

@@ -1,7 +1,3 @@
-#[cfg(test)]
-#[path = "../tests/main_test.rs"]
-mod main_test;
-
 extern crate cargo_rls_install;
 use cargo_rls_install::RustupCompenentsHistory;
 use cargo_rls_install::{global::PRESENT_DATE, help, latest_txt_path, parse_args};
