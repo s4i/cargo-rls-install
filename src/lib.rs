@@ -10,17 +10,10 @@ extern crate lazy_static;
 
 pub mod global;
 pub mod options;
-pub mod own_dir;
+pub mod owndir;
+pub mod scraping;
 
 pub use options::help;
 pub use options::parse_args;
-pub use own_dir::latest_txt_path;
-
-pub fn app_src_dir() -> String {
-    format!(
-        "{}{}{}",
-        env!("CARGO_PKG_NAME"),
-        '-',
-        env!("CARGO_PKG_VERSION")
-    )
-}
+pub use owndir::latest_txt_path;
+pub use scraping::RustupCompenentsHistory;

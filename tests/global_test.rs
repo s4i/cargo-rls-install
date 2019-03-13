@@ -1,9 +1,9 @@
-// #[cfg(test)]
-// #[path = "../tests/global_test.rs"]
-// mod global_test;
+#[macro_use]
+extern crate lazy_static;
 
 use std::sync::Mutex;
 
+#[cfg(test)]
 lazy_static! {
     pub static ref PRESENT_DATE: Mutex<Vec<String>> = {
         let v: Vec<String> = Vec::new();

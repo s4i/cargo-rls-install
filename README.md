@@ -1,8 +1,10 @@
 # cargo-rls-install
 
+[![Build Status](https://travis-ci.org/s4i/cargo-rls-install.svg?branch=master)](https://travis-ci.org/s4i/cargo-rls-install)
+
 ## Purpose
 
-- Rust Language Server easy install.
+### Rust Language Server easy install
 
 Every night, I look for a day when I can use RLS which may be broken.  
 In order to realize it, this program goes to see [the page](https://rust-lang.github.io/rustup-components-history/) that [mexus](https://github.com/mexus/)'s scripts
@@ -78,4 +80,4 @@ All operations are done without approval until the end.
 
 ## Special thanks
 
-- [mexus](https://github.com/mexus/)
+[mexus](https://github.com/mexus/)

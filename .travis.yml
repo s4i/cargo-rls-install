@@ -1,9 +1,9 @@
 language: rust
 cache: cargo
 rust:
+  - stable
   - beta
   - nightly
-  # - stable
 
 matrix:
   fast_finish: true
@@ -41,9 +41,12 @@ matrix:
             - cmake
 
 script:
-  - cargo build --verbose
-  - cargo test  --verbose
+  - cargo build --verbose --all
+  - cargo test  --verbose --all
   # - cargo doc --verbose
 branches:
   only:
     - master
+
+notifications:
+  email: false

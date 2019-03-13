@@ -6,10 +6,10 @@ use std::path::PathBuf;
 use std::process::exit;
 use std::result::Result;
 
-pub fn latest_txt_path(app_name: &str, latest_file: &str) -> PathBuf {
+pub fn latest_txt_path(latest_file: &str) -> PathBuf {
     let mut own_path = cargo_home();
     // println!("{}", name_hyphen_version(&own_path));
-    own_path.push(app_name);
+    own_path.push(app_src_dir());
     own_path.push(latest_file);
     own_path
 }
@@ -55,12 +55,21 @@ fn github_folder(path: &PathBuf) -> Result<String, failure::Error> {
     Err(err_msg("Not found github.com-* directory"))
 }
 
+pub fn app_src_dir() -> String {
+    format!(
+        "{}{}{}",
+        env!("CARGO_PKG_NAME"),
+        '-',
+        env!("CARGO_PKG_VERSION")
+    )
+}
+
 // fn name_hyphen_version(own_path: &PathBuf) -> String {
 //     use cargo_toml::Manifest;
 //     let mut root = PathBuf::new();
 //     root.push(own_path);
-// root.push("Cargo.toml");
-// println!("{:?}", root);
+//     root.push("Cargo.toml");
+//     println!("{:?}", root);
 //     let m = Manifest::from_path(root).unwrap();
 //     let package = m.package.as_ref().unwrap();
 //     [

@@ -23,12 +23,14 @@ pub struct Channel {
     pub nightly: bool,
 }
 
-pub fn parse_args() -> Channel {
+#[test]
+pub fn parse_args() {
     match StructOpt::from_args() {
         Cargo::Install(opt) => opt,
-    }
+    };
 }
 
+#[test]
 pub fn help() {
     println!(
         r"

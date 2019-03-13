@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rls-install"
-version = "1.0.13" # Version write: main.rs and here
+version = "1.0.14"
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"
@@ -14,7 +14,7 @@ keywords = [
     "cargo",
     "cargo-subcommand",
     "rust-language-server",
-    "install",
+    "install-rls-instead",
 ]
 
 include = [
@@ -46,3 +46,17 @@ name = "cargo-rls-install"
 path = "src/main.rs"
 test = false
 doc = false
+
+[badges.travis-ci]
+repository = "s4i/cargo-rls-install"
+branch = "master"
+
+[badges.appveyor]
+service = "github"
+repository = "s4i/cargo-rls-install"
+branch = "master"
+
+[badges.codecov]
+service = "github"
+repository = "s4i/cargo-rls-install"
+branch = "master"
