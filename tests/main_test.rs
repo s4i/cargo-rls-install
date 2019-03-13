@@ -5,7 +5,7 @@ use regex::Regex;
 use std::io::{BufRead, BufReader};
 
 use std::fs;
-use std::process::{exit, Command};
+use std::process::exit;
 
 #[test]
 fn left_ge_right_year_and_anyone() {
@@ -50,7 +50,7 @@ fn left_ge_right_year_and_anyone() {
 
 #[test]
 fn local_system_rust_version() {
-    let sysroot = "C:\\Users\\rls\\.cargo\\registry\\src\\".to_owned();
+    let sysroot = "C:\\Users\\uname\\.cargo\\registry\\src\\cargo-rls-install\\".to_owned();
 
     // forced linux path format
     let path = sysroot
@@ -58,15 +58,17 @@ fn local_system_rust_version() {
         .trim_end()
         .replace("\\", "/");
 
-    assert_eq!("/Users/rls/.cargo/registry/src/", path);
+    assert_eq!(
+        "C:/Users/uname/.cargo/registry/src/cargo-rls-install/".to_owned(),
+        path
+    );
 }
 
 #[test]
 fn sysroot_regex() {
-    let stable = r"C:\Users\cargo-rls-install\.rustup\toolchains\stable-x86_64-pc-windows-msvc";
-    let beta = r"C:\Users\cargo-rls-install\.rustup\toolchains\beta-x86_64-pc-windows-msvc";
-    let nightly =
-        r"C:\Users\cargo-rls-install\.rustup\toolchains\nightly-2019-03-10-x86_64-pc-windows-msvc";
+    let stable = r"C:\Users\uname\.rustup\toolchains\stable-x86_64-pc-windows-msvc";
+    let beta = r"C:\Users\uname\.rustup\toolchains\beta-x86_64-pc-windows-msvc";
+    let nightly = r"C:\Users\uname\.rustup\toolchains\nightly-2019-03-10-x86_64-pc-windows-msvc";
     let channel = [stable, beta, nightly];
 
     let re_stable = Regex::new(r"\b.+stable-").unwrap();
@@ -114,7 +116,7 @@ fn sysroot_regex() {
                 let platform_name = if re_date_plus_hyphen.is_match(&no_head) {
                     re_date_plus_hyphen.replace(&no_head, "").to_string()
                 } else {
-                    "".to_owned()
+                    no_head.to_string()
                 };
                 assert_eq!("x86_64-pc-windows-msvc".to_owned(), platform_name);
             }
@@ -127,7 +129,7 @@ fn sysroot_regex() {
                 let platform_name = if re_date_plus_hyphen.is_match(&no_head) {
                     re_date_plus_hyphen.replace(&no_head, "").to_string()
                 } else {
-                    "".to_owned()
+                    no_head.to_string()
                 };
                 assert_eq!("x86_64-pc-windows-msvc".to_owned(), platform_name);
             }
@@ -140,10 +142,14 @@ fn sysroot_regex() {
 
 #[test]
 fn latest_text_last_line() {
+    let mut path = std::path::PathBuf::new();
+    path.push("tests");
+    path.push("read_test");
+    path.push("latest.txt");
     let reader_opt = fs::OpenOptions::new()
         .read(true)
         .append(true)
-        .open("read_test/latest.txt")
+        .open(path)
         .expect("Can't open file.");
 
     let reader = BufReader::new(reader_opt);
@@ -154,7 +160,7 @@ fn latest_text_last_line() {
         .collect::<Vec<_>>();
 
     match text_vector.len() {
-        0 => unreachable!(),
+        0 => (),
         _ => assert_eq!(
             "2019-03-10".to_owned(),
             text_vector.pop().expect("vector pop failed.")
@@ -204,11 +210,6 @@ fn rust_install() {
     );
     if yes {
         println!("$ rustup install {}", v);
-        Command::new("rustup")
-            .arg("install")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
         println!("OK");
     } else {
         println!("Command execution (y/n)");
@@ -219,11 +220,6 @@ fn rust_install() {
             || buf.to_lowercase().trim() == "yes"
         {
             println!("$ rustup install {}", v);
-            Command::new("rustup")
-                .arg("install")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
             println!("OK");
         } else {
             println!("Cancel");
@@ -250,38 +246,14 @@ fn rls_install() {
     if yes {
         // rls install
         println!("$ rustup component add rls --toolchain {}", &v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rls")
-            .arg("--toolchain")
-            .arg(&v)
-            .status()
-            .expect("Abort installation");
         println!("OK");
 
         // rust-analysis install
         println!("$ rustup component add rust-analysis --toolchain {}", &v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rust-analysis")
-            .arg("--toolchain")
-            .arg(&v)
-            .status()
-            .expect("Abort installation");
         println!("OK");
 
         // rust-src install
         println!("$ rustup component add rust-src --toolchain {}", &v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rust-src")
-            .arg("--toolchain")
-            .arg(&v)
-            .status()
-            .expect("Abort installation");
         println!("OK");
     } else {
         println!("Command execution (y/n)");
@@ -293,38 +265,14 @@ fn rls_install() {
         {
             // rls install
             println!("$ rustup component add rls --toolchain {}", &v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rls")
-                .arg("--toolchain")
-                .arg(&v)
-                .status()
-                .expect("Abort installation");
             println!("OK");
 
             // rust-analysis install
             println!("$ rustup component add rust-analysis --toolchain {}", &v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rust-analysis")
-                .arg("--toolchain")
-                .arg(&v)
-                .status()
-                .expect("Abort installation");
             println!("OK");
 
             // rust-src install
             println!("$ rustup component add rust-src --toolchain {}", &v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rust-src")
-                .arg("--toolchain")
-                .arg(&v)
-                .status()
-                .expect("Abort installation");
             println!("OK");
         } else {
             println!("Cancel");
@@ -349,11 +297,6 @@ fn rust_set_default() {
 
     if yes {
         println!("$ rustup default {}", &v);
-        Command::new("rustup")
-            .arg("default")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
         println!("OK");
     } else {
         println!("Command execution (y/n)");
@@ -364,11 +307,6 @@ fn rust_set_default() {
             || buf.to_lowercase().trim() == "yes"
         {
             println!("$ rustup default {}", &v);
-            Command::new("rustup")
-                .arg("default")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
             println!("OK");
         } else {
             println!("Cancel");
