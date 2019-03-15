@@ -11,12 +11,14 @@ fn scraping_html_text() {
     path.push("html");
     path.push("x86_64-pc-windows-msvc.html");
 
-    let mut byte_to_string =
+    let byte_to_string =
         String::from_utf8(read(path.as_path().to_str().unwrap()).unwrap()).unwrap();
-    if cfg!(target_os = "windows") {
-        byte_to_string = byte_to_string.replace(r"\\", r"\");
-        println!("{}", byte_to_string);
-    }
+
+    // if cfg!(target_os = "windows") {
+    //     byte_to_string = byte_to_string.replace(r"\\", r"\");
+    //     println!("{}", byte_to_string);
+    // }
+
     let document = Document::from(byte_to_string.as_str());
 
     let date = document
