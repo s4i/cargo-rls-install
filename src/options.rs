@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "options_test.rs"]
+mod options_test;
+
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

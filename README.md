@@ -77,7 +77,7 @@ All operations are done without approval until the end.
 -n, --nightly    Install nightly channel Rust and RLS
 -s, --stable     Install stable channel Rust and RLS
 -V, --version    Prints version information
--y, --yes        Pre-approval Rust and RLS install command
+-y, --yes        Pre-approval Rust and RLS install and rustup default command
 ```
 
 ## Special thanks

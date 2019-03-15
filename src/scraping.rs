@@ -1,7 +1,8 @@
 use crate::global::PRESENT_DATE;
 use select::document::Document;
 use select::predicate::{Attr, Name};
-use std::io::{ErrorKind, ErrorKind::InvalidData};
+use std::io::ErrorKind;
+// use std::io::ErrorKind::InvalidData;
 use std::result;
 
 // Trait: RustupCompenentsHistory
@@ -9,33 +10,21 @@ use std::result;
 // HTML(table tag) scraping
 pub trait RustupCompenentsHistory {
     fn rustup_components_history(&self) -> result::Result<(), ErrorKind>;
-    fn read_html_document(url: &str) -> result::Result<Document, ErrorKind>;
     fn scraping(document: Document);
+    // fn switch_url_or_text(url: &str) -> result::Result<Document, ErrorKind>;
 }
 
 impl RustupCompenentsHistory for &str {
     fn rustup_components_history(&self) -> result::Result<(), ErrorKind> {
         let url = self as &str;
-        match Self::read_html_document(url) {
-            Ok(document) => Self::scraping(document),
-            Err(_e) => (), // "InvalidData" not print
-        }
+        let resp = reqwest::get(url).expect("Can't get response.");
+        let document = Document::from_read(resp).expect("Data read failed.");
+        Self::scraping(document);
+        // match Self::switch_url_or_text(url) {
+        // Ok(document) => Self::scraping(document),
+        // Err(_e) => (), // "InvalidData" not print
+        // }
         Ok(())
-    }
-
-    fn read_html_document(url: &str) -> result::Result<Document, ErrorKind> {
-        if url.starts_with("http") {
-            // Get HTML from internet
-            let resp = reqwest::get(url).expect("Can't get response.");
-            let document = Document::from_read(resp).expect("Data read failed.");
-            Ok(document)
-        } else if url.starts_with("<!DOCTYPE") {
-            // Get HTML local file
-            let document = Document::from(url);
-            Ok(document)
-        } else {
-            Err(InvalidData)
-        }
     }
 
     fn scraping(document: Document) {
@@ -44,29 +33,16 @@ impl RustupCompenentsHistory for &str {
             .skip(1)
             .map(|tag| tag.text())
             .collect::<Vec<_>>();
-        // println!("{:?}", date);
-        // let pkg_name = document.find(Attr("scope", "row"))
-        //     .map(|tag| tag.text()).collect::<Vec<_>>();
-        // println!("{:?}", pkg_name);
-        // let build_status = document.find(Name("td"))
-        //     .map(|tag| tag.text()).collect::<Vec<_>>();
-        // println!("{:?}", build_status);
 
         let build_status = document
             .find(Attr("scope", "row"))
-            // .filter(|x| x.text() == "rls")
-            // .next()
             .find(|x| x.text() == "rls")
-            // .map(|tag| tag.text())
-            // .collect::<Vec<_>>(); // result -> "rls"
-            .expect("iter to string failed.")
+            .expect("iter to string failed or not found web page.")
             .parent()
             .unwrap()
             .find(Name("td"))
             .map(|tag| tag.text())
             .collect::<Vec<_>>();
-
-        // println!("{:?}", build_status);
 
         if build_status.iter().all(|x| x == "missing") {
             println!("For RLS, unfortunate 8 days.");
@@ -82,3 +58,18 @@ impl RustupCompenentsHistory for &str {
         }
     }
 }
+
+// fn switch_url_or_text(url_or_text: &str) -> result::Result<Document, ErrorKind> {
+// if url_or_text.starts_with("http") {
+// // Get HTML from internet
+//     let resp = reqwest::get(url_or_text).expect("Can't get response.");
+//     let document = Document::from_read(resp).expect("Data read failed.");
+//     Ok(document)
+// } else if url_or_text.starts_with("<!DOCTYPE") {
+// // Get HTML local file
+//         let document = Document::from(url_or_text);
+//         Ok(document)
+//     } else {
+//         Err(InvalidData)
+//     }
+// }

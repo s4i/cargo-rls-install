@@ -1,8 +1,10 @@
-extern crate cargo_rls_install;
-use regex::Regex;
-use std::fs;
-use std::io::{BufRead, BufReader};
-use std::process::exit;
+use super::{exit, fs, main, BufRead, BufReader, Regex};
+
+#[test]
+#[should_panic]
+fn main_panic() {
+    main();
+}
 
 #[test]
 fn left_ge_right_year_and_anyone() {
@@ -140,8 +142,10 @@ fn sysroot_regex() {
 #[test]
 fn latest_text_last_line() {
     let mut path = std::path::PathBuf::new();
+    path.push(env!("CARGO_MANIFEST_DIR"));
     path.push("tests");
     path.push("read_test");
+    path.push("text");
     path.push("latest.txt");
     let reader_opt = fs::OpenOptions::new()
         .read(true)

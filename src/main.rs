@@ -1,10 +1,13 @@
+#[cfg(test)]
+#[path = "main_test.rs"]
+mod main_test;
+
 extern crate cargo_rls_install;
 use cargo_rls_install::RustupCompenentsHistory;
 use cargo_rls_install::{global::PRESENT_DATE, help, latest_txt_path, parse_args};
 use regex::Regex;
 use std::io::ErrorKind::{NotFound, Other};
-use std::io::{stdin, BufRead, BufReader, BufWriter, ErrorKind, Read, Result, Write};
-use std::path::Path;
+use std::io::{stdin, BufRead, BufReader, BufWriter, ErrorKind, Result, Write};
 use std::process::{exit, Command};
 use std::{fs, result, str};
 
@@ -271,15 +274,6 @@ fn platform(no_head: &str) -> result::Result<String, ErrorKind> {
     } else {
         Err(Other) // No matching. <YYYY-MM-DD>
     }
-}
-
-#[allow(dead_code)]
-fn read_html_file<P: AsRef<Path>>(file_path: P) -> std::io::Result<Vec<u8>> {
-    let mut buf = vec![];
-    let mut reader = BufReader::new(fs::File::open(file_path)?);
-    reader.read_to_end(&mut buf)?;
-    // println!("{:?}", std::str::from_utf8(&buf).unwrap());
-    Ok(buf)
 }
 
 fn latest_text_last_line() -> result::Result<String, ErrorKind> {

@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "global_test.rs"]
+mod global_test;
+
 use std::sync::Mutex;
 
 lazy_static! {
