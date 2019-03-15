@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "scraping_test.rs"]
+mod scraping_test;
+
 use crate::global::PRESENT_DATE;
 use select::document::Document;
 use select::predicate::{Attr, Name};

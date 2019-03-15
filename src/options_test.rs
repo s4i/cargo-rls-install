@@ -1,5 +1,5 @@
 #[test]
-pub fn help() {
+fn help() {
     println!(
         r"
 USAGE:

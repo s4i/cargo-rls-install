@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "owndir_test.rs"]
+mod owndir_test;
+
 // use dirs::home_dir;
 use failure::err_msg;
 use regex::Regex;
@@ -47,15 +51,14 @@ fn github_folder(path: &PathBuf) -> Result<String, failure::Error> {
 
         for d in dirs {
             if re_get_github.is_match(&d) {
-                let item = re_get_github.find(&d).unwrap().as_str().to_owned();
-                return Ok(item);
+                return Ok(re_get_github.find(&d).unwrap().as_str().to_owned());
             }
         }
     }
     Err(err_msg("Not found github.com-* directory"))
 }
 
-pub fn app_src_dir() -> String {
+fn app_src_dir() -> String {
     format!(
         "{}{}{}",
         env!("CARGO_PKG_NAME"),

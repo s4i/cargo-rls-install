@@ -1,11 +1,11 @@
-use select::document::Document;
-use select::predicate::{Attr, Name};
-use std::fs::read;
-use std::path::PathBuf;
+use super::{Attr, Document, Name};
 
 #[test]
 fn scraping_html_text() {
+    use std::fs::read;
+    use std::path::PathBuf;
     let mut path = PathBuf::new();
+    path.push(env!("CARGO_MANIFEST_DIR"));
     path.push("tests");
     path.push("read_test");
     path.push("html");
@@ -51,11 +51,7 @@ fn scraping_html_text() {
 
     // println!("{:?}", build_status);
 
-    if build_status.iter().all(|x| x == "missing") {
-        println!("For RLS, unfortunate 8 days.");
-        println!("It is impossible to find the latest version.");
-        println!("The following version is written in the built-in text.");
-    } else {
+    if !build_status.iter().all(|x| x == "missing") {
         for (i, s) in build_status.iter().enumerate() {
             if s == "present" {
                 let mut vec = vec![];
@@ -102,11 +98,7 @@ fn scraping_method_get() {
 
     // println!("{:?}", build_status);
 
-    if build_status.iter().all(|x| x == "missing") {
-        println!("For RLS, unfortunate 8 days.");
-        println!("It is impossible to find the latest version.");
-        println!("The following version is written in the built-in text.");
-    } else {
+    if !build_status.iter().all(|x| x == "missing") {
         for (i, s) in build_status.iter().enumerate() {
             if s == "present" {
                 let mut vec = vec![];

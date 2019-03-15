@@ -24,7 +24,8 @@ include = [
     "/README.md",
     "/RELEASE.md",
     "/src/*.rs",
-    "/tests/*.rs",
+    "/tests/*",
+    "/examples/*",
 ]
 
 [dependencies]
