@@ -1,14 +1,8 @@
-use super::{exit, fs, main, BufRead, BufReader, Regex};
-
-#[test]
-#[should_panic]
-fn main_panic() {
-    main();
-}
+use super::{exit, fs, BufRead, BufReader, Regex};
 
 #[test]
 fn left_ge_right_year_and_anyone() {
-    let left = "2020-03-12".to_owned();
+    let left = "2020-03-13".to_owned();
     let right = "2019-03-13".to_owned();
 
     println!("Search new version: nightly-{}", left);
@@ -41,7 +35,12 @@ fn left_ge_right_year_and_anyone() {
         (true, false, true) => (),
         (true, false, false) => {
             // year compare
-            if compare_date1[0] > compare_date2[0] {}
+            let ge = if compare_date1[0] > compare_date2[0] {
+                compare_date1[0]
+            } else {
+                compare_date2[1]
+            };
+            assert_eq!(2020, ge);
         }
         _ => (),
     }

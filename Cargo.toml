@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rls-install"
-version = "1.0.14"
+version = "1.0.15"
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"
@@ -45,8 +45,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "cargo-rls-install"
 path = "src/main.rs"
-test = false
-doc = false
 
 [badges.travis-ci]
 repository = "s4i/cargo-rls-install"
