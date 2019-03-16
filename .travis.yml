@@ -2,7 +2,7 @@ language: rust
 cache: cargo
 rust:
   - stable
-  - beta
+  # - beta
   - nightly
 
 matrix:
@@ -10,7 +10,7 @@ matrix:
   allow_failures:
     - env: NAME='cargo-travis'
   include:
-    - rust: stable
+    - rust: nightly
       before_script:
         - rustup component add rustfmt
         - rustup component add clippy

@@ -55,7 +55,7 @@ service = "github"
 repository = "s4i/cargo-rls-install"
 branch = "master"
 
-[badges.codecov]
-service = "github"
-repository = "s4i/cargo-rls-install"
-branch = "master"
+# [badges.codecov]
+# service = "github"
+# repository = "s4i/cargo-rls-install"
+# branch = "master"
