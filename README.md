@@ -3,8 +3,6 @@
 [![Build Status](https://travis-ci.org/s4i/cargo-rls-install.svg?branch=master)](https://travis-ci.org/s4i/cargo-rls-install)
 [![Build status](https://ci.appveyor.com/api/projects/status/jrfl8f3yuu9hsbml?svg=true)](https://ci.appveyor.com/project/s4i/cargo-rls-install)
 
-<!-- [![codecov](https://codecov.io/gh/s4i/cargo-rls-install/branch/master/graph/badge.svg)](https://codecov.io/gh/s4i/cargo-rls-install) -->
-
 ## Purpose
 
 ### Rust Language Server easy install
