@@ -1,12 +1,11 @@
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-pub enum Cargo {
+enum Cargo {
     #[structopt(
         name = "rls-install",
         about = "Install the Rust and Rust Language Server.",
-        author = "",
-        // version = "",
+        author = ""
     )]
     Install(Channel),
 }
@@ -47,6 +46,7 @@ FLAGS:
     -n, --nightly    Install nightly channel Rust and RLS
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
+    -v, --view       RLS build status view
     -y, --yes        Pre-approval Rust and RLS install and rustup default command
     "
     );

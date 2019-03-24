@@ -39,11 +39,7 @@ impl RustupCompenentsHistory for &str {
             .map(|tag| tag.text())
             .collect::<Vec<_>>();
 
-        if build_status.iter().all(|x| x == "missing") {
-            println!("For RLS, unfortunate 8 days.");
-            println!("It is impossible to find the latest version.");
-            println!("The following version is written in the built-in text.");
-        } else {
+        if !build_status.iter().all(|x| x == "missing") {
             let mut map = PRESENT_DATE.lock().unwrap();
             for (dt, status) in date.iter().zip(build_status.iter()) {
                 map.insert(*dt, status.to_owned());

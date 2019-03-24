@@ -1,4 +1,3 @@
-// use dirs::home_dir;
 use failure::err_msg;
 use regex::Regex;
 use std::fs;
@@ -9,7 +8,12 @@ use std::result::Result;
 pub fn latest_txt_path(latest_file: &str) -> PathBuf {
     let mut own_path = cargo_home();
     // println!("{}", name_hyphen_version(&own_path));
-    own_path.push(app_src_dir());
+    own_path.push(format!(
+        "{}{}{}",
+        env!("CARGO_PKG_NAME"),
+        '-',
+        env!("CARGO_PKG_VERSION")
+    ));
     own_path.push(latest_file);
     own_path
 }
@@ -52,13 +56,4 @@ fn github_folder(path: &PathBuf) -> Result<String, failure::Error> {
         }
     }
     Err(err_msg("Not found github.com-* directory"))
-}
-
-fn app_src_dir() -> String {
-    format!(
-        "{}{}{}",
-        env!("CARGO_PKG_NAME"),
-        '-',
-        env!("CARGO_PKG_VERSION")
-    )
 }

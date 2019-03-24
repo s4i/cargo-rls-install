@@ -2,6 +2,7 @@
 
 | Date      | Version | Change                                                                                                                          |
 | --------- | ------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| 2019/3/25 | v1.0.18 | Bug fix.                                                                                                                        |
 | 2019/3/24 | v1.0.17 | Add view option.                                                                                                                |
 | 2019/3/16 | v1.0.16 | Unnecessary data(tests and examples dir) was removed from inclusion.                                                            |
 | 2019/3/16 | v1.0.15 | Test enhancement.                                                                                                               |
