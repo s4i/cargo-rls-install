@@ -1,13 +1,16 @@
-#[cfg(test)]
-#[path = "main_test.rs"]
-mod main_test;
-
 extern crate cargo_rls_install;
-use cargo_rls_install::RustupCompenentsHistory;
-use cargo_rls_install::{global::PRESENT_DATE, help, latest_txt_path, parse_args};
+use cargo_rls_install::{
+    commands::{print_rust_and_rls_install, rls_install, rust_set_default, select_channel},
+    global::PRESENT_DATE,
+    help, installed_toolchain, latest_txt_path, parse_args, RustupCompenentsHistory,
+};
+use chrono::NaiveDate;
 use regex::Regex;
-use std::io::ErrorKind::{NotFound, Other};
-use std::io::{stdin, BufRead, BufReader, BufWriter, ErrorKind, Result, Write};
+use std::io::{
+    BufRead, BufReader, BufWriter, ErrorKind,
+    ErrorKind::{NotFound, Other},
+    Write,
+};
 use std::process::{exit, Command};
 use std::{fs, result, str};
 
@@ -17,6 +20,22 @@ fn main() {
     // Command line
     // lib.rs
     let o = parse_args();
+
+    // view option
+    if o.view {
+        /* Local system rust version */
+        let console_stdout = local_system_rust_version();
+        let (_, platform_name) = sysroot_regex(&console_stdout);
+
+        /* Search url decision and Scraping */
+        url_decision(&platform_name)
+            .as_str()
+            .rustup_components_history();
+
+        view_option();
+
+        exit(0);
+    }
 
     // Stable choice
     match (o.yes, o.stable) {
@@ -76,44 +95,72 @@ fn main() {
     println!("End.");
 }
 
-fn select_channel() -> result::Result<String, failure::Error> {
-    println!("Select channel");
-    println!("[stable/beta/nightly]");
-    let mut buf = String::new();
-    stdin().read_line(&mut buf)?;
-    Ok(buf.to_lowercase().trim().to_owned())
+fn view_option() {
+    // local info
+    let toolchains = installed_toolchain();
+
+    // web status
+    let map = PRESENT_DATE.lock().unwrap();
+
+    /* Status table */
+    println!(" * Rust information\n");
+    println!(" -----Rust & RLS status-----");
+    println!(" ---------------------------");
+    println!(" |{:^12}|{:^12}|", "Build date", "Status");
+    println!(" ---------------------------");
+
+    // web status
+    for (date, status) in map.iter() {
+        if toolchains.contains(&date.format("%F").to_string()) {
+            println!(
+                " |{:^12}|{:^12}| <= Rust Installed",
+                date.format("%F").to_string(),
+                status
+            );
+        } else {
+            println!(" |{:^12}|{:^12}|", date.format("%F").to_string(), status);
+        }
+    }
+
+    // println!(" ---------------------------");
+    // println!(" * Installed Nightly Rust");
+    // println!(" ___________________________");
+
+    // for tc in toolchains {
+    //     println!(" |{:^12}|{:^12}|", tc, "Installed");
+    // }
+
+    println!(" -----------End-------------");
+}
+
+fn url_decision(platform_name: &str) -> String {
+    /* Switch web pages */
+    if platform_name == "x86_64-unknown-linux-gnu" {
+        "https://rust-lang.github.io/rustup-components-history/".to_owned()
+    } else {
+        format!(
+            "{}{}",
+            "https://rust-lang.github.io/rustup-components-history/", platform_name
+        )
+    }
 }
 
 fn nightly(yes: bool) {
-    /* File read */
-    let file_data: &str = "";
-    // let file_path = r#"src/x86_64-pc-windows-msvc.html"#;
-    // let mut buf = vec![];
-    // match read_html_file(file_path) {
-    //     Ok(v) => buf = v,
-    //     Err(e) => println!("{}", e.to_owned()),
-    // }
-    // file_data = str::from_utf8(&buf).unwrap();
-    // println!("{:?}", file_data);
-
     /* Local system rust version */
     let console_stdout = local_system_rust_version();
     let (now_build_date, platform_name) = sysroot_regex(&console_stdout);
 
-    /* Switch web pages */
-    let url = if platform_name == "x86_64-unknown-linux-gnu" {
-        "https://rust-lang.github.io/rustup-components-history/".to_owned()
-    } else {
-        "https://rust-lang.github.io/rustup-components-history/".to_owned() + &platform_name
-    };
+    /* Search url decision */
+    let url = url_decision(&platform_name);
 
-    // get text version
+    // Get text version(nightly-"Date" store)
     let mut text_latest_version = match latest_text_last_line() {
         Ok(version) => version.trim().to_owned(),
         Err(_e) => "".to_owned(),
     };
 
     /* Latest version description */
+    let file_data: &str = "";
     if !url.is_empty() {
         /* URL mode */
         text_latest_version = alive_rls(&url, &text_latest_version);
@@ -128,11 +175,11 @@ fn nightly(yes: bool) {
         println!("    1. Rust version: OK");
         match rls_install(&version, yes) {
             Ok(()) => (),
-            Err(e) => eprintln!("{}", e.to_string()),
+            Err(e) => eprintln!("{:?}", e),
         }
         match rust_set_default(&version, yes) {
             Ok(()) => (),
-            Err(e) => eprintln!("{}", e.to_string()),
+            Err(e) => eprintln!("{:?}", e),
         }
     } else {
         match (text_latest_version.is_empty(), now_build_date.is_empty()) {
@@ -140,7 +187,13 @@ fn nightly(yes: bool) {
             (false, false) => {
                 // Local rust version date(nightly-{date}) compare
                 // If you have the latest version, recommend installing
-                if left_ge_right_year_and_anyone(&text_latest_version, &now_build_date) {
+                let text_date = NaiveDate::parse_from_str(&text_latest_version, "%Y-%m-%d")
+                    .expect("date type parse error");
+
+                let toolchain_date = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d")
+                    .expect("date type parse error");
+
+                if text_date > toolchain_date {
                     print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest_version), yes)
                 }
             }
@@ -153,46 +206,6 @@ fn nightly(yes: bool) {
                 println!("Can't search RLS latest version.");
             }
         }
-    }
-}
-
-fn left_ge_right_year_and_anyone(left: &str, right: &str) -> bool {
-    println!("Search new version: nightly-{}", left);
-    println!("Current installed version: nightly-{}", right);
-
-    let compare_date1 = left
-        .split('-')
-        .map(|x| x.parse().expect("parse error"))
-        .collect::<Vec<i32>>(); // [2019 ,2 ,24]
-    let compare_date2 = right
-        .split('-')
-        .map(|x| x.parse().expect("parse error"))
-        .collect::<Vec<i32>>(); // [2019 ,2 ,24]
-    let mut decision = (false, false, false); // YYYY | MM || DD
-
-    for (cnt, item) in compare_date1.iter().zip(compare_date2.iter()).enumerate() {
-        if item.0 >= item.1 {
-            match cnt {
-                0 => decision.0 = true,
-                1 => decision.1 = true,
-                2 => decision.2 = true,
-                _ => {}
-            }
-        }
-    }
-
-    match decision {
-        (true, true, true) => true,
-        (true, true, false) => true,
-        (true, false, true) => true,
-        (true, false, false) => {
-            // year compare
-            if compare_date1[0] > compare_date2[0] {
-                return true;
-            }
-            false
-        }
-        _ => false,
     }
 }
 
@@ -211,6 +224,7 @@ fn local_system_rust_version() -> String {
         .replace("\\", "/")
 }
 
+// ex. Return: ("2019-03-23", "x86_64-pc-windows-msvc")
 fn sysroot_regex(path: &str) -> (String, String) {
     let re_stable = Regex::new(r"\b.+stable-").unwrap();
     let re_beta = Regex::new(r"\b.+beta-").unwrap();
@@ -234,6 +248,15 @@ fn sysroot_regex(path: &str) -> (String, String) {
                 "".to_owned()
             };
 
+            if now_build_date.is_empty() {
+                println!("\n * Default use Rust toolchain: Nightly\n");
+            } else {
+                println!(
+                    "\n * Default use Rust toolchain: Nightly-{}\n",
+                    now_build_date
+                );
+            }
+
             let platform_name = match platform(&no_head) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
@@ -243,7 +266,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
         (false, true, false) => {
             let no_head = re_beta.replace(path, "");
 
-            println!("Default use Rust channel: Beta");
+            println!("\n * Default use Rust toolchain: Beta\n");
             let platform_name = match platform(&no_head) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
@@ -253,7 +276,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
         (false, false, true) => {
             let no_head = re_stable.replace(path, "");
 
-            println!("Default use Rust channel: Stable");
+            println!("\n * Default use Rust toolchain: Stable\n");
             let platform_name = match platform(&no_head) {
                 Ok(name) => name,
                 Err(_e) => "".to_owned(),
@@ -296,261 +319,48 @@ fn latest_text_last_line() -> result::Result<String, ErrorKind> {
     }
 }
 
-fn alive_rls(target: &str, text_latest_version: &str) -> String {
-    let writer_opt = fs::OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(latest_txt_path(BUILD_IN_TEXT_NAME))
-        .expect("Can't open file.");
+fn alive_rls(url: &str, text_latest_version: &str) -> String {
+    url.rustup_components_history();
 
-    let mut web_latest_date = "".to_owned();
-    match &target.rustup_components_history() {
-        Ok(()) => {
-            let vec = PRESENT_DATE.lock().unwrap();
-            web_latest_date = vec.first().unwrap().to_owned();
-            if text_latest_version != web_latest_date {
-                // Text write newline
-                let mut writer = BufWriter::new(writer_opt);
-                writeln!(writer, "{}", &web_latest_date).expect("File write failed.");
-            }
-        }
-        Err(e) => {
-            eprintln!("{:?}", e);
-        }
+    let map = PRESENT_DATE.lock().unwrap();
+
+    let mut v = vec![];
+    for (date, _) in map.iter() {
+        v.push(date);
+    }
+
+    println!("{:?}", v);
+
+    let web_latest_date = v.iter().max().unwrap().format("%F").to_string();
+
+    println!("{}", web_latest_date);
+
+    if text_latest_version != web_latest_date {
+        // Text write newline
+        let writer_opt = fs::OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(latest_txt_path(BUILD_IN_TEXT_NAME))
+            .expect("Can't open file.");
+        let mut writer = BufWriter::new(writer_opt);
+        writeln!(writer, "{}", &web_latest_date).expect("File write failed.");
     }
 
     if !text_latest_version.is_empty() {
-        if text_latest_version == web_latest_date {
-            return web_latest_date.to_owned();
-        }
-        if left_ge_right_year_and_anyone(&web_latest_date, &text_latest_version) {
-            web_latest_date.to_owned()
+        let webpage_date =
+            NaiveDate::parse_from_str(&web_latest_date, "%Y-%m-%d").expect("date type parse error");
+
+        let text_date = NaiveDate::parse_from_str(&text_latest_version, "%Y-%m-%d")
+            .expect("date type parse error");
+
+        if webpage_date >= text_date {
+            web_latest_date
         } else {
             text_latest_version.to_owned()
         }
     } else {
+        // web_latest_date never gets empty
+        // If this is empty, panic long ago.
         web_latest_date
     }
-}
-
-fn print_rust_and_rls_install(v: &str, yes: bool) {
-    if v == "stable" || v == "beta" {
-        println!(
-            r"
-Requested Rust channel
-
-    => {}
-    ",
-            v
-        );
-    } else {
-        println!(
-            r"
-Recommended Nightly Rust version for using rls
-
-    => {}
-    ",
-            v
-        );
-    }
-
-    // Operation 1
-    match rust_install(&v, yes) {
-        Ok(()) => (),
-        Err(e) => eprintln!("{}", e.to_string()),
-    }
-
-    // Operation 2
-    match rls_install(&v, yes) {
-        Ok(()) => (),
-        Err(e) => eprintln!("{}", e.to_string()),
-    }
-
-    // Operation 3
-    match rust_set_default(&v, yes) {
-        Ok(()) => (),
-        Err(e) => eprintln!("{}", e.to_string()),
-    }
-}
-
-fn rust_install(v: &str, yes: bool) -> Result<()> {
-    println!(
-        r"
-    1. Rust installation:
-
-        $ rustup install {}
-    ",
-        v
-    );
-    if yes {
-        println!("$ rustup install {}", v);
-        Command::new("rustup")
-            .arg("install")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
-        println!("OK");
-    } else {
-        println!("Command execution (y/n)");
-        let mut buf = String::new();
-        stdin().read_line(&mut buf)?;
-        if yes
-            || buf.trim() == ""
-            || buf.to_lowercase().trim() == "y"
-            || buf.to_lowercase().trim() == "yes"
-        {
-            println!("$ rustup install {}", v);
-            Command::new("rustup")
-                .arg("install")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
-            println!("OK");
-        } else {
-            println!("Cancel");
-            exit(0);
-        }
-    }
-    Ok(())
-}
-
-fn rls_install(v: &str, yes: bool) -> Result<()> {
-    println!(
-        r"
-    2. RLS installation:
-
-        $ rustup component add rls --toolchain {}
-        $ rustup component add rust-analysis --toolchain {}
-        $ rustup component add rust-src --toolchain {}
-",
-        v, v, v
-    );
-    if yes {
-        // rls install
-        println!("$ rustup component add rls --toolchain {}", v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rls")
-            .arg("--toolchain")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
-        println!("OK");
-
-        // rust-analysis install
-        println!("$ rustup component add rust-analysis --toolchain {}", v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rust-analysis")
-            .arg("--toolchain")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
-        println!("OK");
-
-        // rust-src install
-        println!("$ rustup component add rust-src --toolchain {}", v);
-        Command::new("rustup")
-            .arg("component")
-            .arg("add")
-            .arg("rust-src")
-            .arg("--toolchain")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
-        println!("OK");
-    } else {
-        println!("Command execution (y/n)");
-        let mut buf = String::new();
-        stdin().read_line(&mut buf)?;
-        if yes
-            || buf.trim() == ""
-            || buf.to_lowercase().trim() == "y"
-            || buf.to_lowercase().trim() == "yes"
-        {
-            // rls install
-            println!("$ rustup component add rls --toolchain {}", v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rls")
-                .arg("--toolchain")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
-            println!("OK");
-
-            // rust-analysis install
-            println!("$ rustup component add rust-analysis --toolchain {}", v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rust-analysis")
-                .arg("--toolchain")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
-            println!("OK");
-
-            // rust-src install
-            println!("$ rustup component add rust-src --toolchain {}", v);
-            Command::new("rustup")
-                .arg("component")
-                .arg("add")
-                .arg("rust-src")
-                .arg("--toolchain")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
-            println!("OK");
-        } else {
-            println!("Cancel");
-            exit(0);
-        }
-    }
-    Ok(())
-}
-
-fn rust_set_default(v: &str, yes: bool) -> Result<()> {
-    println!(
-        r"
-    3. Set default:
-
-        $ rustup default {}
-    ",
-        v
-    );
-
-    if yes {
-        println!("$ rustup default {}", v);
-        Command::new("rustup")
-            .arg("default")
-            .arg(v)
-            .status()
-            .expect("Abort installation");
-        println!("OK");
-    } else {
-        println!("Command execution (y/n)");
-        let mut buf = String::new();
-        stdin().read_line(&mut buf)?;
-        if yes
-            || buf.trim() == ""
-            || buf.to_lowercase().trim() == "y"
-            || buf.to_lowercase().trim() == "yes"
-        {
-            println!("$ rustup default {}", v);
-            Command::new("rustup")
-                .arg("default")
-                .arg(v)
-                .status()
-                .expect("Abort installation");
-            println!("OK");
-        } else {
-            println!("Cancel");
-            exit(0);
-        }
-    }
-    Ok(())
 }

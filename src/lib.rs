@@ -1,19 +1,15 @@
-extern crate failure;
-extern crate regex;
-extern crate reqwest;
-extern crate select;
-extern crate structopt;
 #[macro_use]
 extern crate lazy_static;
-// extern crate cargo_toml;
-// extern crate dirs;
 
+pub mod commands;
 pub mod global;
 pub mod options;
 pub mod owndir;
+pub mod rustup;
 pub mod scraping;
 
-pub use options::help;
-pub use options::parse_args;
+pub use commands::*;
+pub use options::*;
 pub use owndir::latest_txt_path;
+pub use rustup::installed_toolchain;
 pub use scraping::RustupCompenentsHistory;

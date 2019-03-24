@@ -1,4 +1,8 @@
-use super::{exit, fs, BufRead, BufReader, Regex};
+extern crate cargo_rls_install;
+use regex::Regex;
+use std::fs;
+use std::io::{BufRead, BufReader};
+use std::process::exit;
 
 #[test]
 fn left_ge_right_year_and_anyone() {

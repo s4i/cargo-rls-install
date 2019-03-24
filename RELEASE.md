@@ -2,6 +2,7 @@
 
 | Date      | Version | Change                                                                                                                          |
 | --------- | ------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| 2019/3/24 | v1.0.17 | Add view option.                                                                                                                |
 | 2019/3/16 | v1.0.16 | Unnecessary data(tests and examples dir) was removed from inclusion.                                                            |
 | 2019/3/16 | v1.0.15 | Test enhancement.                                                                                                               |
 | 2019/3/14 | v1.0.14 | 1. Add CI setting files and Travis CI build passing marker.<br>2. Add test and example files.<br>3. Coding according to clippy. |

@@ -1,4 +1,4 @@
-use super::Regex;
+use regex::Regex;
 
 #[test]
 fn github_folder() {

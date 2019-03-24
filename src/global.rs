@@ -1,12 +1,10 @@
-#[cfg(test)]
-#[path = "global_test.rs"]
-mod global_test;
-
+use chrono::NaiveDate;
+use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 lazy_static! {
-    pub static ref PRESENT_DATE: Mutex<Vec<String>> = {
-        let v: Vec<String> = Vec::new();
-        Mutex::new(v)
+    pub static ref PRESENT_DATE: Mutex<BTreeMap<NaiveDate, String>> = {
+        let m: BTreeMap<NaiveDate, String> = BTreeMap::new();
+        Mutex::new(m)
     };
 }

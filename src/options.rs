@@ -1,7 +1,3 @@
-#[cfg(test)]
-#[path = "options_test.rs"]
-mod options_test;
-
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -17,14 +13,20 @@ pub enum Cargo {
 
 #[derive(Debug, StructOpt)]
 pub struct Channel {
-    #[structopt(short, long, help = "Pre-approval Rust and RLS install command")]
-    pub yes: bool,
     #[structopt(short, long, help = "Install stable channel Rust and RLS")]
     pub stable: bool,
     #[structopt(short, long, help = "Install beta channel Rust and RLS")]
     pub beta: bool,
     #[structopt(short, long, help = "Install nightly channel Rust and RLS")]
     pub nightly: bool,
+    #[structopt(short, long, help = "RLS build status view")]
+    pub view: bool,
+    #[structopt(
+        short,
+        long,
+        help = "Pre-approval Rust and RLS install and rustup default command"
+    )]
+    pub yes: bool,
 }
 
 pub fn parse_args() -> Channel {

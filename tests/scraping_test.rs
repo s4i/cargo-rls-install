@@ -1,4 +1,5 @@
-use super::{Attr, Document, Name};
+use select::document::Document;
+use select::predicate::{Attr, Name};
 
 #[test]
 fn scraping_html_text() {

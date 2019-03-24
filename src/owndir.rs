@@ -1,7 +1,3 @@
-#[cfg(test)]
-#[path = "owndir_test.rs"]
-mod owndir_test;
-
 // use dirs::home_dir;
 use failure::err_msg;
 use regex::Regex;
@@ -66,19 +62,3 @@ fn app_src_dir() -> String {
         env!("CARGO_PKG_VERSION")
     )
 }
-
-// fn name_hyphen_version(own_path: &PathBuf) -> String {
-//     use cargo_toml::Manifest;
-//     let mut root = PathBuf::new();
-//     root.push(own_path);
-//     root.push("Cargo.toml");
-//     println!("{:?}", root);
-//     let m = Manifest::from_path(root).unwrap();
-//     let package = m.package.as_ref().unwrap();
-//     [
-//         package.name.clone(),
-//         "-".to_owned(),
-//         package.version.clone(),
-//     ]
-//     .concat()
-// }

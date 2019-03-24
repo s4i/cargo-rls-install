@@ -49,24 +49,58 @@ cargo rls-install [FLAGS]
 ### Example1
 
 ```bash
-cargo rls-install -n
+cargo rls-install -n # --nightly
 ```
 
 Three operations are executed by the above command.
 
 1. Rust Language(Nightly channel) install.
 2. RLS(Rust Language Server) install.
-3. Set default use channel.
+3. Change default toolchain.
 
 Before executing each operation, ask whether to execute it.
 
 ### Example2
 
 ```bash
-cargo rls-install -ny
+cargo rls-install -ny # --nightly --yes
 ```
 
 All operations are done without approval until the end.
+
+### Example3
+
+```bash
+cargo rls-install -s # --stable
+```
+
+Install Stable Rust and RLS and change the default toolchain.
+
+### Example4
+
+```bash
+cargo rls-install -b # --beta
+```
+
+Install Beta Rust and RLS and change the default toolchain.
+
+### Example5
+
+```bash
+cargo rls-install -ysbn
+```
+
+Install RLS on all Rust channels.
+The default toolchain is Nightly Rust, as the last operation on Nightly Rust is done.
+
+### Example6(v1.0.17~)
+
+```bash
+cargo rls-install -v # --view
+```
+
+Check the build status of Rust and RLS.
+This command is intended to be used only by itself.
 
 ## Flags
 
@@ -76,6 +110,7 @@ All operations are done without approval until the end.
 -n, --nightly    Install nightly channel Rust and RLS
 -s, --stable     Install stable channel Rust and RLS
 -V, --version    Prints version information
+-v, --view       RLS build status view
 -y, --yes        Pre-approval Rust and RLS install and rustup default command
 ```
 
