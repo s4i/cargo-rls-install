@@ -21,7 +21,7 @@ fn main() {
     if o.view {
         match (o.yes, o.stable, o.beta, o.nightly) {
             (false, false, false, false) => view(),
-            _ => println!("Invalid options"),
+            _ => println!("Invalid option."),
         }
         println!("End.");
         exit(0);
@@ -94,7 +94,7 @@ fn view() {
 
     if has_eight_days_before {
         println!(" ---------------------------------");
-        println!(" -Old Nightly Rust(Before 9 days)-");
+        println!(" |Old Nightly Rust(Before 9 days)|");
         println!(" ---------------------------------");
         println!(" | {:<19} {:^10}|", "Build date", "");
         println!(" ---------------------------------");
@@ -111,7 +111,7 @@ fn view() {
         println!(" |_______________________________|");
     }
 
-    println!(" --------Rust & RLS status--------");
+    println!(" |       Rust & RLS status       |");
     println!(" ---------------------------------");
     println!(" | {:<19}|{:^10}|", "Build date", "Status");
     println!(" ---------------------------------");
@@ -145,16 +145,16 @@ fn nightly(yes: bool) {
         .rustup_components_history();
 
     // Get text date(nightly-"Date" store)
-    let mut latest_txt = Vec::new();
+    let mut latest_txt_lines = Vec::new();
     match latest_text_lines() {
-        Ok(text_date) => latest_txt = text_date,
+        Ok(text_date) => latest_txt_lines = text_date,
         Err(e) => println!("{:?}", e),
     };
 
     // line tail(=latest date) get
-    latest_txt.retain(|s| s != "");
-    let text_latest = latest_txt.last().unwrap();
-    let chrono_text = NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").unwrap();
+    latest_txt_lines.retain(|s| s != ""); // remove empty
+    let text_latest = latest_txt_lines.last().unwrap(); // get latest
+    let chrono_text = NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("date");
 
     // Display
     println!(" {:<20} Status", "Build date");
@@ -172,7 +172,7 @@ fn nightly(yes: bool) {
         }
     }
 
-    println!(" -----------------------------\n");
+    println!(" -----------------------------");
 
     let web_latest = if !present_vec.is_empty() {
         present_vec
@@ -202,11 +202,11 @@ fn nightly(yes: bool) {
             // Rust and RLS aren't installed on the local system
             // Case: first use or not default channel nightly
             if chrono_web > chrono_text {
-                print_rust_and_rls_install(&("nightly-".to_owned() + &web_latest), yes);
+                print_rust_and_rls_install(&web_latest, yes);
                 // Text write newline
                 text_write(&web_latest);
             } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest), yes);
+                print_rust_and_rls_install(&text_latest, yes);
             }
         }
         (true, true) => {
@@ -216,36 +216,42 @@ fn nightly(yes: bool) {
             // Rust update check
             if chrono_now > chrono_web && chrono_now > chrono_text {
                 println!("Can't search Rust and RLS latest version.");
+            } else if chrono_now >= chrono_web {
+                skip_rust_install(&now_build_date, yes);
             } else if chrono_web > chrono_text {
-                print_rust_and_rls_install(&("nightly-".to_owned() + &web_latest), yes);
+                print_rust_and_rls_install(&web_latest, yes);
                 // Text write newline
                 text_write(&web_latest);
             } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest), yes);
+                print_rust_and_rls_install(&text_latest, yes);
             }
         }
         (true, false) => {
             let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
 
             if chrono_text > chrono_now {
-                print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest), yes);
+                print_rust_and_rls_install(&text_latest, yes);
             } else {
-                // Display
-                let version = "nightly-".to_owned() + &text_latest;
-                println!(" 1. Rust version: OK({})\n", version);
-                rls_install(&version, yes);
-                rust_set_default(&version, yes);
+                skip_rust_install(&now_build_date, yes);
             }
         }
         (false, false) => {
-            print_rust_and_rls_install(&("nightly-".to_owned() + &text_latest), yes);
+            print_rust_and_rls_install(&text_latest, yes);
         }
     }
+}
+
+fn skip_rust_install(date: &str, yes: bool) {
+    let target = format!("{}{}", "nightly-", date);
+    println!(" 1. Rust version: OK({})\n", target);
+    rls_install(&target, yes);
+    rust_set_default(&target, yes);
 }
 
 fn yes_only(o: &Channel) {
     match (o.yes, o.stable, o.beta, o.nightly) {
         (true, false, false, false) => match select_channel() {
+            // &*: String -> &str
             Ok(ch) => match &*ch {
                 "0" => print_rust_and_rls_install("stable", o.yes),
                 "0.stable" => print_rust_and_rls_install("stable", o.yes),
@@ -360,10 +366,7 @@ fn latest_text_lines() -> std::result::Result<Vec<String>, std::io::ErrorKind> {
         0 => Err(std::io::ErrorKind::NotFound),
         _ => {
             let text_str = String::from_utf8(text_vector).unwrap();
-            let lines: Vec<_> = text_str
-                .split('\n')
-                .map(std::borrow::ToOwned::to_owned)
-                .collect();
+            let lines: Vec<_> = text_str.split('\n').map(|s| s.trim().to_owned()).collect();
             Ok(lines)
         }
     }

@@ -27,12 +27,14 @@ pub fn select_channel() -> std::result::Result<String, failure::Error> {
     Ok(buf.to_lowercase().trim().to_owned())
 }
 
-pub fn print_rust_and_rls_install(channel: &str, yes: bool) {
-    if channel == "stable" || channel == "beta" {
-        println!(" * Requested Rust channel: {}\n", channel);
+pub fn print_rust_and_rls_install(ch: &str, yes: bool) {
+    let channel = if ch == "stable" || ch == "beta" {
+        println!("\n * Requested Rust channel: {}", ch);
+        ch.to_owned()
     } else {
-        println!(" * Recommended Nightly Rust: {}\n", channel);
-    }
+        println!("\n * Recommended Nightly Rust: {}", ch);
+        format!("{}{}", "nightly-", ch)
+    };
 
     // Operation 1
     rust_install(&channel, yes);
@@ -45,8 +47,12 @@ pub fn print_rust_and_rls_install(channel: &str, yes: bool) {
 }
 
 fn rust_install(channel: &str, yes: bool) {
-    println!(" 1. Rust installation command.\n");
-    println!("$ rustup install {}\n", channel);
+    println!("\n 1. Rust installation command.\n");
+
+    if !yes {
+        println!("$ rustup install {}\n", channel);
+    }
+
     match excecution(yes) {
         Ok(()) => command_rust(&channel),
         Err(e) => {
@@ -57,24 +63,44 @@ fn rust_install(channel: &str, yes: bool) {
 }
 
 pub fn rls_install(channel: &str, yes: bool) {
-    println!(" 2. RLS installation commands.\n");
-    println!("$ rustup component add rls --toolchain {}", channel);
-    println!(
-        "$ rustup component add rust-analysis --toolchain {}",
-        channel
-    );
-    println!("$ rustup component add rust-src --toolchain {}\n", channel);
+    println!("\n 2. RLS installation commands.\n");
+
+    if !yes {
+        println!("$ rustup component add rls --toolchain {}\n", channel);
+    }
+
     match excecution(yes) {
-        Ok(()) => {
-            // rls install
-            command_rls(&channel);
-
-            // rust-analysis install
-            command_rust_analysis(&channel);
-
-            // rust-src install
-            command_rust_src(&channel);
+        Ok(()) => command_rls(&channel), // rls install
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
         }
+    }
+
+    if !yes {
+        println!(
+            "\n$ rustup component add rust-analysis --toolchain {}\n",
+            channel
+        );
+    }
+
+    match excecution(yes) {
+        Ok(()) => command_rust_analysis(&channel), // rust-analysis install
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+
+    if !yes {
+        println!(
+            "\n$ rustup component add rust-src --toolchain {}\n",
+            channel
+        );
+    }
+
+    match excecution(yes) {
+        Ok(()) => command_rust_src(&channel), // rust-src install
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -84,7 +110,10 @@ pub fn rls_install(channel: &str, yes: bool) {
 
 pub fn rust_set_default(channel: &str, yes: bool) {
     println!("\n 3. Set default:\n");
-    println!("$ rustup default {}\n", channel);
+
+    if !yes {
+        println!("$ rustup default {}\n", channel);
+    }
 
     match excecution(yes) {
         Ok(()) => command_rust_default(&channel),
@@ -96,7 +125,7 @@ pub fn rust_set_default(channel: &str, yes: bool) {
 }
 
 fn command_rust(channel: &str) {
-    println!("\n$ rustup install {}", channel);
+    println!("$ rustup install {}", channel);
     Command::new("rustup")
         .args(&["install", channel])
         .status()
@@ -105,7 +134,7 @@ fn command_rust(channel: &str) {
 }
 
 fn command_rls(channel: &str) {
-    println!("\n$ rustup component add rls --toolchain {}", channel);
+    println!("$ rustup component add rls --toolchain {}", channel);
     Command::new("rustup")
         .args(&["component", "add", "rls", "--toolchain", channel])
         .status()
@@ -135,7 +164,7 @@ fn command_rust_src(channel: &str) {
 }
 
 fn command_rust_default(channel: &str) {
-    println!("\n$ rustup default {}", channel);
+    println!("$ rustup default {}", channel);
     Command::new("rustup")
         .args(&["default", channel])
         .status()
