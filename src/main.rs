@@ -243,7 +243,7 @@ fn nightly(yes: bool) {
 
 fn skip_rust_install(date: &str, yes: bool) {
     let target = format!("{}{}", "nightly-", date);
-    println!(" 1. Rust version: OK({})\n", target);
+    println!("\n 1. Rust version: OK({})", target);
     rls_install(&target, yes);
     rust_set_default(&target, yes);
 }
