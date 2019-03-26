@@ -1,5 +1,4 @@
 use crate::global::PRESENT_DATE;
-use chrono::NaiveDate;
 use select::document::Document;
 use select::predicate::{Attr, Name};
 
@@ -24,9 +23,7 @@ impl RustupCompenentsHistory for &str {
         let date = document
             .find(Attr("scope", "col"))
             .skip(1)
-            .map(|tag| {
-                NaiveDate::parse_from_str(&tag.text(), "%Y-%m-%d").expect("date type parse error")
-            })
+            .map(|tag| tag.text())
             .collect::<Vec<_>>();
 
         let build_status = document
@@ -42,7 +39,7 @@ impl RustupCompenentsHistory for &str {
         if !build_status.iter().all(|x| x == "missing") {
             let mut map = PRESENT_DATE.lock().unwrap();
             for (dt, status) in date.iter().zip(build_status.iter()) {
-                map.insert(*dt, status.to_owned());
+                map.insert(dt.to_owned(), status.to_owned());
             }
         }
     }

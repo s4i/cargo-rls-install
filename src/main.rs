@@ -71,7 +71,7 @@ fn view() {
         .rustup_components_history();
 
     // local info
-    let toolchains = installed_toolchain();
+    let local_toolchains = installed_toolchain();
 
     // web status
     let map = PRESENT_DATE.lock().unwrap();
@@ -82,12 +82,12 @@ fn view() {
     // web status
     let mut eight_days = Vec::new();
     for (date, _) in map.iter() {
-        eight_days.push(date.format("%F").to_string());
+        eight_days.push(date);
     }
 
     let mut has_eight_days_before = false;
-    for tc in &toolchains {
-        if !eight_days.contains(tc) {
+    for tc in &local_toolchains {
+        if !eight_days.contains(&tc) {
             has_eight_days_before = true;
         }
     }
@@ -99,8 +99,8 @@ fn view() {
         println!(" | {:<19} {:^10}|", "Build date", "");
         println!(" ---------------------------------");
 
-        for tc in &toolchains {
-            if !eight_days.contains(tc) {
+        for tc in &local_toolchains {
+            if !eight_days.contains(&tc) {
                 println!(
                     " | {:<19} {:^10}| <= Installed",
                     format!("{}{}", "nightly-", tc),
@@ -117,16 +117,16 @@ fn view() {
     println!(" ---------------------------------");
 
     for (date, status) in map.iter() {
-        if toolchains.contains(&date.format("%F").to_string()) {
+        if local_toolchains.contains(&date) {
             println!(
                 " | {:<19}|{:^10}| <= Installed",
-                format!("{}{}", "nightly-", date.format("%F").to_string()),
+                format!("{}{}", "nightly-", date),
                 status
             );
         } else {
             println!(
                 " | {:<19}|{:^10}|",
-                format!("{}{}", "nightly-", date.format("%F").to_string()),
+                format!("{}{}", "nightly-", date),
                 status
             );
         }
@@ -165,10 +165,11 @@ fn nightly(yes: bool) {
     // global variable
     let map = PRESENT_DATE.lock().unwrap();
 
-    for (date, status) in map.clone().into_iter() {
+    for (date, status) in map.iter() {
         println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
         if status == "present" {
-            present_vec.push(date);
+            present_vec
+                .push(NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("date type parse error"));
         }
     }
 
