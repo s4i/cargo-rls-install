@@ -33,7 +33,7 @@ fn main() {
             let platform_name = if re_date_plus_hyphen.is_match(&no_head) {
                 re_date_plus_hyphen.replace(&no_head, "").to_string()
             } else {
-                "".to_owned()
+                String::new()
             };
 
             println!(

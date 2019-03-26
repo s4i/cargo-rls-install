@@ -188,7 +188,7 @@ fn nightly(yes: bool) {
         println!("For RLS, unfortunate 8 days.");
         println!("It is impossible to find the latest version.");
         println!("The following version is written in the built-in text.");
-        "".to_owned()
+        String::new()
     };
 
     if text_latest.is_empty() {
@@ -323,7 +323,7 @@ fn sysroot_regex(path: &str) -> (String, String) {
             let now_build_date = if re_date.is_match(&no_head) {
                 re_date.find(&no_head).unwrap().as_str().to_owned()
             } else {
-                "".to_owned()
+                String::new()
             };
 
             if now_build_date.is_empty() {
@@ -340,16 +340,16 @@ fn sysroot_regex(path: &str) -> (String, String) {
             println!("\n * Default use Rust toolchain: Beta\n");
             let no_head = re_beta.replace(path, "");
             let platform_name = platform(&no_head);
-            ("".to_owned(), platform_name)
+            (String::new(), platform_name)
         }
         (false, false, true) => {
             println!("\n * Default use Rust toolchain: Stable\n");
             let no_head = re_stable.replace(path, "");
-            ("".to_owned(), platform(&no_head))
+            (String::new(), platform(&no_head))
         }
         _ => {
             eprintln!("Other Error");
-            ("".to_owned(), "".to_owned())
+            (String::new(), String::new())
         }
     }
 }

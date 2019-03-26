@@ -93,7 +93,7 @@ fn sysroot_regex() {
                 let now_build_date = if re_date.is_match(&no_head) {
                     re_date.find(&no_head).unwrap().as_str().to_owned()
                 } else {
-                    "".to_owned()
+                    String::new()
                 };
 
                 let re_date_plus_hyphen = Regex::new(r"\d{4}-\d{2}-\d{2}-").unwrap();
@@ -101,7 +101,7 @@ fn sysroot_regex() {
                 let platform_name = if re_date_plus_hyphen.is_match(&no_head) {
                     re_date_plus_hyphen.replace(&no_head, "").to_string()
                 } else {
-                    "".to_owned()
+                    String::new()
                 };
 
                 assert_eq!(
