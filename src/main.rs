@@ -202,7 +202,7 @@ fn nightly(yes: bool) {
     }
 
     // left==true: Installed rust-YYYY-MM-DD.
-    // right==true: Scraping sucessed. 
+    // right==true: Scraping sucessed.
     // chrono_text and text_latest: Absolutely obtainable.
     match (!now_build_date.is_empty(), !web_latest.is_empty()) {
         (false, true) => {
