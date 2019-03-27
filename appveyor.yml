@@ -76,3 +76,4 @@ test_script:
 
 cache:
   - C:\Users\appveyor\.cargo
+  - C:\Users\appveyor\.rustup
