@@ -19,7 +19,6 @@ impl RustupCompenentsHistory for &str {
     }
 
     fn scraping(document: Document) {
-        // Vec<chrono::NaiveDate>
         let date = document
             .find(Attr("scope", "col"))
             .skip(1)
