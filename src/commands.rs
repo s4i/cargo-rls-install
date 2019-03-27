@@ -27,23 +27,37 @@ pub fn select_channel() -> std::result::Result<String, failure::Error> {
     Ok(buf.to_lowercase().trim().to_owned())
 }
 
-pub fn print_rust_and_rls_install(ch: &str, yes: bool) {
+pub fn print_rust_and_rls_install(
+    ch: &str,
+    yes: bool,
+    skip_rust_install: bool,
+    skip_default_setting: bool,
+) {
     let channel = if ch == "stable" || ch == "beta" {
         println!("\n * Requested Rust channel: {}", ch);
         ch.to_owned()
     } else {
+        // YYYY-MM-DD
         println!("\n * Recommended Nightly Rust: {}", ch);
         format!("{}{}", "nightly-", ch)
     };
 
     // Operation 1
-    rust_install(&channel, yes);
+    if skip_rust_install {
+        println!("\n 1. Rust version: OK({})", channel);
+    } else {
+        rust_install(&channel, yes);
+    }
 
     // Operation 2
     rls_install(&channel, yes);
 
     // Operation 3
-    rust_set_default(&channel, yes);
+    if skip_default_setting {
+        println!("\n 3. Set default: Already set");
+    } else {
+        rust_set_default(&channel, yes);
+    }
 }
 
 fn rust_install(channel: &str, yes: bool) {
@@ -62,7 +76,7 @@ fn rust_install(channel: &str, yes: bool) {
     }
 }
 
-pub fn rls_install(channel: &str, yes: bool) {
+fn rls_install(channel: &str, yes: bool) {
     println!("\n 2. RLS installation commands.\n");
 
     if !yes {
@@ -108,7 +122,7 @@ pub fn rls_install(channel: &str, yes: bool) {
     }
 }
 
-pub fn rust_set_default(channel: &str, yes: bool) {
+fn rust_set_default(channel: &str, yes: bool) {
     println!("\n 3. Set default:\n");
 
     if !yes {

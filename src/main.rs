@@ -1,9 +1,12 @@
 extern crate cargo_rls_install;
 use cargo_rls_install::{
-    commands::{print_rust_and_rls_install, rls_install, rust_set_default, select_channel},
+    commands::{print_rust_and_rls_install, select_channel},
     global::PRESENT_DATE,
-    help, latest_txt_path, parse_args, Channel, RustupCompenentsHistory,
+    local_env::latest_txt_path,
+    options::{help, parse_args, Channel},
+    scraping::RustupCompenentsHistory,
 };
+
 use chrono::NaiveDate;
 use regex::Regex;
 use std::io::{BufWriter, Write};
@@ -29,12 +32,12 @@ fn main() {
 
     // Stable choice
     if o.stable {
-        print_rust_and_rls_install("stable", o.yes);
+        print_rust_and_rls_install("stable", o.yes, false, false);
     }
 
     // Beta choice
     if o.beta {
-        print_rust_and_rls_install("beta", o.yes);
+        print_rust_and_rls_install("beta", o.yes, false, false);
     }
 
     // Nightly choice
@@ -154,7 +157,8 @@ fn nightly(yes: bool) {
     // line tail(=latest date) get
     latest_txt_lines.retain(|s| s != ""); // remove empty
     let text_latest = latest_txt_lines.last().unwrap(); // get latest
-    let chrono_text = NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("date");
+    let chrono_text =
+        NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("Parse error: NaiveData type");
 
     // Display
     println!(" {:<20} Status", "Build date");
@@ -168,8 +172,9 @@ fn nightly(yes: bool) {
     for (date, status) in map.iter() {
         println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
         if status == "present" {
-            present_vec
-                .push(NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("date type parse error"));
+            present_vec.push(
+                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type"),
+            );
         }
     }
 
@@ -196,57 +201,68 @@ fn nightly(yes: bool) {
         exit(1);
     }
 
+    // left==true: Installed rust-YYYY-MM-DD.
+    // right==true: Scraping sucessed. 
+    // chrono_text and text_latest: Absolutely obtainable.
     match (!now_build_date.is_empty(), !web_latest.is_empty()) {
         (false, true) => {
             let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
 
-            // Rust and RLS aren't installed on the local system
-            // Case: first use or not default channel nightly
+            // Rust and RLS aren't installed on the local system.
+            // Case: first use or not default channel nightly.
             if chrono_web > chrono_text {
-                print_rust_and_rls_install(&web_latest, yes);
+                print_rust_and_rls_install(&web_latest, yes, false, false);
                 // Text write newline
                 text_write(&web_latest);
             } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(&text_latest, yes);
+                print_rust_and_rls_install(&text_latest, yes, false, false);
             }
         }
         (true, true) => {
             let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
             let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
 
-            // Rust update check
-            if chrono_now > chrono_web && chrono_now > chrono_text {
-                println!("Can't search Rust and RLS latest version.");
-            } else if chrono_now >= chrono_web {
-                skip_rust_install(&now_build_date, yes);
-            } else if chrono_web > chrono_text {
-                print_rust_and_rls_install(&web_latest, yes);
+            // Case: Already nightly-YYYY-MM-DD & rls installed.
+            // if chrono_now > chrono_web && chrono_now > chrono_text {
+            //     println!("Can't search Rust and RLS latest version.");
+            if chrono_web > chrono_text {
+                print_rust_and_rls_install(
+                    &web_latest,
+                    yes,
+                    chrono_now >= chrono_web,
+                    chrono_now == chrono_web,
+                );
                 // Text write newline
                 text_write(&web_latest);
             } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(&text_latest, yes);
+                print_rust_and_rls_install(
+                    &text_latest,
+                    yes,
+                    chrono_now >= chrono_text,
+                    chrono_now == chrono_text,
+                );
             }
         }
         (true, false) => {
             let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
 
-            if chrono_text > chrono_now {
-                print_rust_and_rls_install(&text_latest, yes);
+            // Case: clippy won't be useful for 8 days.
+            if chrono_now < chrono_text {
+                print_rust_and_rls_install(&text_latest, yes, false, false);
             } else {
-                skip_rust_install(&now_build_date, yes);
+                print_rust_and_rls_install(
+                    &now_build_date,
+                    yes,
+                    chrono_now >= chrono_text,
+                    chrono_now >= chrono_text,
+                );
             }
         }
         (false, false) => {
-            print_rust_and_rls_install(&text_latest, yes);
+            // Case: Clippy won't be useful for 8 days, when this tool first use.
+            print_rust_and_rls_install(&text_latest, yes, false, false)
         }
     }
-}
-
-fn skip_rust_install(date: &str, yes: bool) {
-    let target = format!("{}{}", "nightly-", date);
-    println!("\n 1. Rust version: OK({})", target);
-    rls_install(&target, yes);
-    rust_set_default(&target, yes);
 }
 
 fn yes_only(o: &Channel) {
@@ -254,12 +270,12 @@ fn yes_only(o: &Channel) {
         (true, false, false, false) => match select_channel() {
             // &*: String -> &str
             Ok(ch) => match &*ch {
-                "0" => print_rust_and_rls_install("stable", o.yes),
-                "0.stable" => print_rust_and_rls_install("stable", o.yes),
-                "stable" => print_rust_and_rls_install(&ch, o.yes),
-                "1" => print_rust_and_rls_install("beta", o.yes),
-                "1.beta" => print_rust_and_rls_install("beta", o.yes),
-                "beta" => print_rust_and_rls_install(&ch, o.yes),
+                "0" => print_rust_and_rls_install("stable", o.yes, false, false),
+                "0.stable" => print_rust_and_rls_install("stable", o.yes, false, false),
+                "stable" => print_rust_and_rls_install(&ch, o.yes, false, false),
+                "1" => print_rust_and_rls_install("beta", o.yes, false, false),
+                "1.beta" => print_rust_and_rls_install("beta", o.yes, false, false),
+                "beta" => print_rust_and_rls_install(&ch, o.yes, false, false),
                 "2" => nightly(o.yes),
                 "2.nightly" => nightly(o.yes),
                 "nightly" => nightly(o.yes),
