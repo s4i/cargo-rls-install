@@ -13,8 +13,8 @@ pub trait RustupCompenentsHistory {
 impl RustupCompenentsHistory for &str {
     fn rustup_components_history(&self) {
         let url = self as &str;
-        let resp = reqwest::get(url).expect("Can't get response.");
-        let document = Document::from_read(resp).expect("Data read failed.");
+        let resp = reqwest::get(url).expect("Can't get response");
+        let document = Document::from_read(resp).expect("Data read failed");
         Self::scraping(document);
     }
 
@@ -28,7 +28,7 @@ impl RustupCompenentsHistory for &str {
         let build_status = document
             .find(Attr("scope", "row"))
             .find(|x| x.text() == "rls")
-            .expect("iter to string failed or not found web page.")
+            .expect("iter to string failed or not found web page")
             .parent()
             .unwrap()
             .find(Name("td"))

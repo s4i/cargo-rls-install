@@ -20,7 +20,7 @@ pub fn latest_txt_path(latest_file: &str) -> PathBuf {
 
 fn cargo_home() -> PathBuf {
     let mut path = PathBuf::new();
-    // path.push(home_dir().expect("Not found home directory."));
+    // path.push(home_dir().expect("Not found home directory"));
     // path.push(".cargo"); // $home/.cargo
     path.push(env!("CARGO_HOME"));
     path.push("registry");

@@ -20,7 +20,7 @@ fn excecution(yes: bool) -> Result<()> {
 
 pub fn select_channel() -> std::result::Result<String, failure::Error> {
     println!("\n * Select channel");
-    print!(" [0.stable, 1.beta, 2.nightly] -> ");
+    print!(" [0:stable, 1:beta, 2:nightly] -> ");
     stdout().flush().unwrap();
     let mut buf = String::new();
     stdin().read_line(&mut buf)?;
@@ -44,7 +44,7 @@ pub fn print_rust_and_rls_install(
 
     // Operation 1
     if skip_rust_install {
-        println!("\n 1. Rust version: OK({})", channel);
+        println!("\n   1. Rust version: OK({} installed)", channel);
     } else {
         rust_install(&channel, yes);
     }
@@ -54,14 +54,14 @@ pub fn print_rust_and_rls_install(
 
     // Operation 3
     if skip_default_setting {
-        println!("\n 3. Set default: Already set");
+        println!("\n   3. Set default: Already set\n");
     } else {
         rust_set_default(&channel, yes);
     }
 }
 
 fn rust_install(channel: &str, yes: bool) {
-    println!("\n 1. Rust installation command.\n");
+    println!("\n   1. Rust installation command:\n");
 
     if !yes {
         println!("$ rustup install {}\n", channel);
@@ -77,10 +77,10 @@ fn rust_install(channel: &str, yes: bool) {
 }
 
 fn rls_install(channel: &str, yes: bool) {
-    println!("\n 2. RLS installation commands.\n");
+    println!("\n   2. RLS installation commands:");
 
     if !yes {
-        println!("$ rustup component add rls --toolchain {}\n", channel);
+        println!("\n$ rustup component add rls --toolchain {}\n", channel);
     }
 
     match excecution(yes) {
@@ -123,7 +123,7 @@ fn rls_install(channel: &str, yes: bool) {
 }
 
 fn rust_set_default(channel: &str, yes: bool) {
-    println!("\n 3. Set default:\n");
+    println!("\n   3. Set default:\n");
 
     if !yes {
         println!("$ rustup default {}\n", channel);
@@ -148,7 +148,7 @@ fn command_rust(channel: &str) {
 }
 
 fn command_rls(channel: &str) {
-    println!("$ rustup component add rls --toolchain {}", channel);
+    println!("\n$ rustup component add rls --toolchain {}", channel);
     Command::new("rustup")
         .args(&["component", "add", "rls", "--toolchain", channel])
         .status()
@@ -178,7 +178,7 @@ fn command_rust_src(channel: &str) {
 }
 
 fn command_rust_default(channel: &str) {
-    println!("$ rustup default {}", channel);
+    println!("\n$ rustup default {}", channel);
     Command::new("rustup")
         .args(&["default", channel])
         .status()

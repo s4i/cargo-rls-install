@@ -24,20 +24,42 @@ fn main() {
     if o.view {
         match (o.yes, o.stable, o.beta, o.nightly) {
             (false, false, false, false) => view(),
-            _ => println!("Invalid option."),
+            _ => println!("Invalid option"),
         }
-        println!("End.");
+        println!("End");
         exit(0);
+    }
+
+    let mut has_stable = false;
+    let mut has_beta = false;
+
+    let re_channel = Regex::new(r"(default)").unwrap();
+    let mut channel_name = String::new();
+
+    for lt in installed_toolchains() {
+        if lt.starts_with("stable-") {
+            has_stable = true;
+        } else if lt.starts_with("beta-") {
+            has_beta = true;
+        }
+        if re_channel.is_match(&lt) {
+            channel_name = lt;
+        }
     }
 
     // Stable choice
     if o.stable {
-        print_rust_and_rls_install("stable", o.yes, false, false);
+        print_rust_and_rls_install(
+            "stable",
+            o.yes,
+            has_stable,
+            channel_name.starts_with("stable-"),
+        );
     }
 
     // Beta choice
     if o.beta {
-        print_rust_and_rls_install("beta", o.yes, false, false);
+        print_rust_and_rls_install("beta", o.yes, has_beta, channel_name.starts_with("beta-"));
     }
 
     // Nightly choice
@@ -46,27 +68,46 @@ fn main() {
     }
 
     // Yes only or option nothing
-    yes_only(&o);
-
-    println!("End.");
-}
-
-fn url_decision(platform_name: &str) -> String {
-    /* Switch web pages */
-    if platform_name == "x86_64-unknown-linux-gnu" {
-        "https://rust-lang.github.io/rustup-components-history/".to_owned()
-    } else {
-        format!(
-            "{}{}",
-            "https://rust-lang.github.io/rustup-components-history/", platform_name
-        )
+    match (o.yes, o.stable, o.beta, o.nightly) {
+        (true, false, false, false) => match select_channel() {
+            // &*: String -> &str
+            Ok(ch) => match &*ch {
+                "0" | "stable" | "0:stable" => {
+                    print_rust_and_rls_install(
+                        "stable",
+                        o.yes,
+                        has_stable,
+                        channel_name.starts_with("stable-"),
+                    );
+                }
+                "1" | "beta" | "1:beta" => {
+                    print_rust_and_rls_install(
+                        "beta",
+                        o.yes,
+                        has_beta,
+                        channel_name.starts_with("beta-"),
+                    );
+                }
+                "2" | "nightly" | "2:nightly" => nightly(o.yes),
+                _ => println!("No matches"),
+            },
+            Err(_e) => {
+                println!("Cancel");
+            }
+        },
+        (false, false, false, false) => {
+            help();
+            println!("Please input option");
+        }
+        _ => (),
     }
+
+    println!("End");
 }
 
 fn view() {
     /* Local system rust version */
-    let console_stdout = local_system_rust_version();
-    let (_, platform_name) = sysroot_regex(&console_stdout);
+    let (_, platform_name) = sysroot_regex();
 
     /* Search url decision and Scraping */
     url_decision(&platform_name)
@@ -74,7 +115,16 @@ fn view() {
         .rustup_components_history();
 
     // local info
-    let local_toolchains = installed_toolchain();
+    let mut local_nightlys = vec![];
+
+    let re_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}-").unwrap();
+    let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
+
+    for t in installed_toolchains() {
+        if re_nightly.is_match(&t) {
+            local_nightlys.push(re_date.find(&t).unwrap().as_str().to_owned());
+        }
+    }
 
     // web status
     let map = PRESENT_DATE.lock().unwrap();
@@ -89,20 +139,20 @@ fn view() {
     }
 
     let mut has_eight_days_before = false;
-    for tc in &local_toolchains {
-        if !eight_days.contains(&tc) {
+    for lt in &local_nightlys {
+        if !eight_days.contains(&lt) {
             has_eight_days_before = true;
         }
     }
 
     if has_eight_days_before {
         println!(" ---------------------------------");
-        println!(" |Old Nightly Rust(Before 9 days)|");
+        println!(" |    Old Rust(Before 9 days)    |");
         println!(" ---------------------------------");
         println!(" | {:<19} {:^10}|", "Build date", "");
         println!(" ---------------------------------");
 
-        for tc in &local_toolchains {
+        for tc in &local_nightlys {
             if !eight_days.contains(&tc) {
                 println!(
                     " | {:<19} {:^10}| <= Installed",
@@ -111,16 +161,16 @@ fn view() {
                 );
             }
         }
-        println!(" |_______________________________|");
     }
 
+    println!(" ---------------------------------");
     println!(" |       Rust & RLS status       |");
     println!(" ---------------------------------");
     println!(" | {:<19}|{:^10}|", "Build date", "Status");
     println!(" ---------------------------------");
 
     for (date, status) in map.iter() {
-        if local_toolchains.contains(&date) {
+        if local_nightlys.contains(&date) {
             println!(
                 " | {:<19}|{:^10}| <= Installed",
                 format!("{}{}", "nightly-", date),
@@ -139,8 +189,7 @@ fn view() {
 
 fn nightly(yes: bool) {
     /* Local system rust version */
-    let console_stdout = local_system_rust_version();
-    let (now_build_date, platform_name) = sysroot_regex(&console_stdout);
+    let (now_build_date, platform_name) = sysroot_regex();
 
     // Get web page date(nightly-"Date" store) - global variable
     url_decision(&platform_name)
@@ -155,8 +204,7 @@ fn nightly(yes: bool) {
     };
 
     // line tail(=latest date) get
-    latest_txt_lines.retain(|s| s != ""); // remove empty
-    let text_latest = latest_txt_lines.last().unwrap(); // get latest
+    let text_latest = latest_txt_lines.last().unwrap(); // get last line(latest)
     let chrono_text =
         NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("Parse error: NaiveData type");
 
@@ -190,14 +238,14 @@ fn nightly(yes: bool) {
     } else {
         // eight days missing
         // Rust update unavailable
-        println!("For RLS, unfortunate 8 days.");
-        println!("It is impossible to find the latest version.");
-        println!("The following version is written in the built-in text.");
+        println!("For RLS, unfortunate 8 days");
+        println!("It is impossible to find the latest version");
+        println!("The following version is written in the built-in text");
         String::new()
     };
 
     if text_latest.is_empty() {
-        println!("Can't search Rust and RLS latest version.");
+        println!("Can't search Rust and RLS latest version");
         exit(1);
     }
 
@@ -206,25 +254,40 @@ fn nightly(yes: bool) {
     // chrono_text and text_latest: Absolutely obtainable.
     match (!now_build_date.is_empty(), !web_latest.is_empty()) {
         (false, true) => {
-            let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
-
             // Rust and RLS aren't installed on the local system.
             // Case: first use or not default channel nightly.
+            let chrono_now_vec = match installed_nightly() {
+                Ok(vec) => vec,
+                Err(_e) => vec![NaiveDate::from_ymd(2018, 12, 31)],
+            };
+
+            let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
+
             if chrono_web > chrono_text {
-                print_rust_and_rls_install(&web_latest, yes, false, false);
+                print_rust_and_rls_install(
+                    &web_latest,
+                    yes,
+                    chrono_now_vec.contains(&chrono_web),
+                    false,
+                );
                 // Text write newline
                 text_write(&web_latest);
             } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(&text_latest, yes, false, false);
+                print_rust_and_rls_install(
+                    &text_latest,
+                    yes,
+                    chrono_now_vec.contains(&chrono_text),
+                    false,
+                );
             }
         }
         (true, true) => {
+            // Case: Already nightly-YYYY-MM-DD & rls installed.
+            // if chrono_now > chrono_web && chrono_now > chrono_text {
+            //     println!("Can't search Rust and RLS latest version");
             let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
             let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
 
-            // Case: Already nightly-YYYY-MM-DD & rls installed.
-            // if chrono_now > chrono_web && chrono_now > chrono_text {
-            //     println!("Can't search Rust and RLS latest version.");
             if chrono_web > chrono_text {
                 print_rust_and_rls_install(
                     &web_latest,
@@ -244,9 +307,8 @@ fn nightly(yes: bool) {
             }
         }
         (true, false) => {
-            let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
-
             // Case: clippy won't be useful for 8 days.
+            let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
             if chrono_now < chrono_text {
                 print_rust_and_rls_install(&text_latest, yes, false, false);
             } else {
@@ -254,42 +316,56 @@ fn nightly(yes: bool) {
                     &now_build_date,
                     yes,
                     chrono_now >= chrono_text,
-                    chrono_now >= chrono_text,
+                    chrono_now == chrono_text,
                 );
             }
         }
         (false, false) => {
             // Case: Clippy won't be useful for 8 days, when this tool first use.
-            print_rust_and_rls_install(&text_latest, yes, false, false)
+            let chrono_now_vec = match installed_nightly() {
+                Ok(vec) => vec,
+                Err(_e) => vec![NaiveDate::from_ymd(2018, 12, 31)],
+            };
+
+            print_rust_and_rls_install(
+                &text_latest,
+                yes,
+                chrono_now_vec.contains(&chrono_text),
+                false,
+            )
         }
     }
 }
 
-fn yes_only(o: &Channel) {
-    match (o.yes, o.stable, o.beta, o.nightly) {
-        (true, false, false, false) => match select_channel() {
-            // &*: String -> &str
-            Ok(ch) => match &*ch {
-                "0" => print_rust_and_rls_install("stable", o.yes, false, false),
-                "0.stable" => print_rust_and_rls_install("stable", o.yes, false, false),
-                "stable" => print_rust_and_rls_install(&ch, o.yes, false, false),
-                "1" => print_rust_and_rls_install("beta", o.yes, false, false),
-                "1.beta" => print_rust_and_rls_install("beta", o.yes, false, false),
-                "beta" => print_rust_and_rls_install(&ch, o.yes, false, false),
-                "2" => nightly(o.yes),
-                "2.nightly" => nightly(o.yes),
-                "nightly" => nightly(o.yes),
-                _ => println!("No matches"),
-            },
-            Err(_e) => {
-                println!("Cancel");
-            }
-        },
-        (false, false, false, false) => {
-            help();
-            println!("Please input option.");
+fn url_decision(platform_name: &str) -> String {
+    /* Switch web pages */
+    if platform_name == "x86_64-unknown-linux-gnu" {
+        "https://rust-lang.github.io/rustup-components-history/".to_owned()
+    } else {
+        format!(
+            "{}{}",
+            "https://rust-lang.github.io/rustup-components-history/", platform_name
+        )
+    }
+}
+
+fn installed_nightly() -> Result<Vec<NaiveDate>, String> {
+    let re_default_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}-").unwrap();
+    let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
+
+    let mut chrono_now_vec = Vec::new();
+
+    for lt in installed_toolchains() {
+        if re_default_nightly.is_match(&lt) {
+            let now_build_date = re_date.find(&lt).unwrap().as_str();
+            chrono_now_vec.push(NaiveDate::parse_from_str(now_build_date, "%Y-%m-%d").unwrap());
         }
-        _ => (),
+    }
+
+    if !chrono_now_vec.is_empty() {
+        Ok(chrono_now_vec)
+    } else {
+        Err("Not installed".to_owned())
     }
 }
 
@@ -298,9 +374,9 @@ fn text_write(web_latest: &str) {
         .write(true)
         .append(true)
         .open(latest_txt_path(BUILD_IN_TEXT_NAME))
-        .expect("Can't open file.");
+        .expect("Can't open file");
     let mut writer = BufWriter::new(writer_opt);
-    writeln!(writer, "{}", web_latest).expect("File write failed.");
+    writeln!(writer, "{}", web_latest).expect("File write failed");
 }
 
 fn local_system_rust_version() -> String {
@@ -319,7 +395,9 @@ fn local_system_rust_version() -> String {
 }
 
 // ex. Return: ("2019-03-23", "x86_64-pc-windows-msvc")
-fn sysroot_regex(path: &str) -> (String, String) {
+fn sysroot_regex() -> (String, String) {
+    let path = &local_system_rust_version();
+
     let re_stable = Regex::new(r"\b.+stable-").unwrap();
     let re_beta = Regex::new(r"\b.+beta-").unwrap();
     let re_nightly = Regex::new(r"\b.+nightly-").unwrap();
@@ -343,23 +421,23 @@ fn sysroot_regex(path: &str) -> (String, String) {
             };
 
             if now_build_date.is_empty() {
-                println!("\n * Default use Rust toolchain: Nightly\n");
+                println!("\n * Default use Rust toolchain: nightly\n");
             } else {
                 println!(
-                    "\n * Default use Rust toolchain: Nightly-{}\n",
+                    "\n * Default use Rust toolchain: nightly-{}\n",
                     now_build_date
                 );
             }
             (now_build_date, platform(&no_head))
         }
         (false, true, false) => {
-            println!("\n * Default use Rust toolchain: Beta\n");
+            println!("\n * Default use Rust toolchain: beta\n");
             let no_head = re_beta.replace(path, "");
             let platform_name = platform(&no_head);
             (String::new(), platform_name)
         }
         (false, false, true) => {
-            println!("\n * Default use Rust toolchain: Stable\n");
+            println!("\n * Default use Rust toolchain: stable\n");
             let no_head = re_stable.replace(path, "");
             (String::new(), platform(&no_head))
         }
@@ -383,13 +461,17 @@ fn latest_text_lines() -> std::result::Result<Vec<String>, std::io::ErrorKind> {
         0 => Err(std::io::ErrorKind::NotFound),
         _ => {
             let text_str = String::from_utf8(text_vector).unwrap();
-            let lines: Vec<_> = text_str.split('\n').map(|s| s.trim().to_owned()).collect();
+            let lines: Vec<_> = text_str
+                .trim_end()
+                .split('\n')
+                .map(|s| s.trim().to_owned())
+                .collect();
             Ok(lines)
         }
     }
 }
 
-pub fn installed_toolchain() -> Vec<String> {
+pub fn installed_toolchains() -> Vec<String> {
     let output = String::from_utf8(
         Command::new("rustup")
             // .arg("show")
@@ -400,17 +482,9 @@ pub fn installed_toolchain() -> Vec<String> {
     )
     .unwrap();
 
-    let lines: Vec<&str> = output.split('\n').collect();
-
-    let re_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}-").unwrap();
-    let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
-
-    let mut installed_toolchain = vec![];
-
-    for line in &lines {
-        if re_nightly.is_match(line) {
-            installed_toolchain.push(re_date.find(line).unwrap().as_str().to_owned());
-        }
-    }
-    installed_toolchain
+    output
+        .trim_end()
+        .split('\n')
+        .map(std::borrow::ToOwned::to_owned)
+        .collect::<Vec<_>>()
 }
