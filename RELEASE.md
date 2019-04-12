@@ -2,6 +2,7 @@
 
 | Date      | Version | Change                                                                                                                          |
 | --------- | ------- | :------------------------------------------------------------------------------------------------------------------------------ |
+| 2019/4/12 | v1.0.21 | Accept "Last available".                                                                                                        |
 | 2019/3/29 | v1.0.20 | Display command only when necessary.                                                                                            |
 | 2019/3/26 | v1.0.19 | Bug fix: Can't install Nightly Rust.                                                                                            |
 | 2019/3/25 | v1.0.18 | Bug fix: Can't get the appropriate version.                                                                                     |

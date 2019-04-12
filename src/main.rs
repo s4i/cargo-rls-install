@@ -176,6 +176,12 @@ fn view() {
                 format!("{}{}", "nightly-", date),
                 status
             );
+        } else if date.starts_with("Last") {
+            println!(" ---------------------------------");
+            println!(
+                " |{:^31}|",
+                format!("{}{}{}", date, ": ".to_owned(), status)
+            );
         } else {
             println!(
                 " | {:<19}|{:^10}|",
@@ -184,7 +190,7 @@ fn view() {
             );
         }
     }
-    println!(" |_______________________________|");
+    println!(" ---------------------------------");
 }
 
 fn nightly(yes: bool) {
@@ -218,7 +224,9 @@ fn nightly(yes: bool) {
     let map = PRESENT_DATE.lock().unwrap();
 
     for (date, status) in map.iter() {
-        println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
+        if !date.starts_with("Last") {
+            println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
+        }
         if status == "present" {
             present_vec.push(
                 NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type"),
@@ -236,9 +244,9 @@ fn nightly(yes: bool) {
             .format("%F")
             .to_string()
     } else {
-        // eight days missing
+        // Eight days missing all
         // Rust update unavailable
-        println!("For RLS, unfortunate 8 days");
+        println!("\nFor RLS, unfortunate 8 days");
         println!("It is impossible to find the latest version");
         println!("The following version is written in the built-in text");
         String::new()
