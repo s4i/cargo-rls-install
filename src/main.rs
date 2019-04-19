@@ -133,27 +133,27 @@ fn view() {
     println!(" * Rust information");
 
     // web status
-    let mut eight_days = Vec::new();
+    let mut seven_days = Vec::new();
     for (date, _) in map.iter() {
-        eight_days.push(date);
+        seven_days.push(date);
     }
 
-    let mut has_eight_days_before = false;
+    let mut has_seven_days_before = false;
     for lt in &local_nightlys {
-        if !eight_days.contains(&lt) {
-            has_eight_days_before = true;
+        if !seven_days.contains(&lt) {
+            has_seven_days_before = true;
         }
     }
 
-    if has_eight_days_before {
+    if has_seven_days_before {
         println!(" ---------------------------------");
-        println!(" |    Old Rust(Before 9 days)    |");
+        println!(" |    Old Rust(Before 8 days)    |");
         println!(" ---------------------------------");
         println!(" | {:<19} {:^10}|", "Build date", "");
         println!(" ---------------------------------");
 
         for tc in &local_nightlys {
-            if !eight_days.contains(&tc) {
+            if !seven_days.contains(&tc) {
                 println!(
                     " | {:<19} {:^10}| <= Installed",
                     format!("{}{}", "nightly-", tc),
@@ -244,9 +244,9 @@ fn nightly(yes: bool) {
             .format("%F")
             .to_string()
     } else {
-        // Eight days missing all
+        // Seven days missing all
         // Rust update unavailable
-        println!("\nFor RLS, unfortunate 8 days");
+        println!("\nFor RLS, unfortunate 7 days");
         println!("It is impossible to find the latest version");
         println!("The following version is written in the built-in text");
         String::new()

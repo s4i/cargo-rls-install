@@ -37,7 +37,7 @@ impl RustupCompenentsHistory for &str {
 
         let mut map = PRESENT_DATE.lock().unwrap();
         if build_status.iter().all(|x| x == "missing") {
-            map.insert("eight days".to_owned(), "missing all".to_owned());
+            map.insert("seven days".to_owned(), "missing".to_owned());
         } else {
             for (dt, status) in date.iter().zip(build_status.iter()) {
                 map.insert(dt.to_owned(), status.to_owned());
