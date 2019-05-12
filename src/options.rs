@@ -21,6 +21,14 @@ pub struct Channel {
     #[structopt(short, long, help = "RLS build status view")]
     pub view: bool,
     #[structopt(
+        short = "c",
+        long = "comp-add",
+        help = "Wrapper(rustup component add [argument])"
+    )]
+    pub comp_add: Option<String>,
+    #[structopt(short = "f", long = "rustfmt", help = "Install rustfmt")]
+    pub rustfmt: bool,
+    #[structopt(
         short,
         long,
         help = "Pre-approval Rust and RLS install and rustup default command"
@@ -42,6 +50,8 @@ USAGE:
 
 FLAGS:
     -b, --beta       Install beta channel Rust and RLS
+    -c, --comp-add   Wrapper(rustup component add [argument])
+    -f, --rustfmt    Install rustfmt
     -h, --help       Prints help information
     -n, --nightly    Install nightly channel Rust and RLS
     -s, --stable     Install stable channel Rust and RLS

@@ -1,5 +1,6 @@
 use std::io::{stdin, stdout, Result, Write};
 use std::process::{exit, Command};
+use std::str::from_utf8;
 
 fn excecution(yes: bool) -> Result<()> {
     if !yes {
@@ -84,7 +85,7 @@ fn rls_install(channel: &str, yes: bool) {
     }
 
     match excecution(yes) {
-        Ok(()) => command_rls(&channel), // rls install
+        Ok(()) => component_add(&channel, "rls"), // rls install
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -99,7 +100,7 @@ fn rls_install(channel: &str, yes: bool) {
     }
 
     match excecution(yes) {
-        Ok(()) => command_rust_analysis(&channel), // rust-analysis install
+        Ok(()) => component_add(&channel, "rust-analysis"), // rust-analysis install
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -114,7 +115,7 @@ fn rls_install(channel: &str, yes: bool) {
     }
 
     match excecution(yes) {
-        Ok(()) => command_rust_src(&channel), // rust-src install
+        Ok(()) => component_add(&channel, "rust-src"), // rust-src install
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -147,34 +148,29 @@ fn command_rust(channel: &str) {
     println!("OK");
 }
 
-fn command_rls(channel: &str) {
-    println!("\n$ rustup component add rls --toolchain {}", channel);
-    Command::new("rustup")
-        .args(&["component", "add", "rls", "--toolchain", channel])
-        .status()
-        .expect("Abort installation");
-    println!("OK");
-}
-
-fn command_rust_analysis(channel: &str) {
+pub fn component_add(channel: &str, component: &str) {
     println!(
-        "\n$ rustup component add rust-analysis --toolchain {}",
-        channel
+        "\n$ rustup component add {} --toolchain {}",
+        component, channel
     );
     Command::new("rustup")
-        .args(&["component", "add", "rust-analysis", "--toolchain", channel])
+        .args(&["component", "add", component, "--toolchain", channel])
         .status()
         .expect("Abort installation");
     println!("OK");
 }
 
-fn command_rust_src(channel: &str) {
-    println!("\n$ rustup component add rust-src --toolchain {}", channel);
-    Command::new("rustup")
-        .args(&["component", "add", "rust-src", "--toolchain", channel])
-        .status()
+pub fn component_add_and_get_output(channel: &str, component: &str) -> String {
+    println!(
+        "\n$ rustup component add {} --toolchain {}",
+        component, channel
+    );
+    let output = Command::new("rustup")
+        .args(&["component", "add", component, "--toolchain", channel])
+        .output()
         .expect("Abort installation");
-    println!("OK");
+
+    from_utf8(&output.stderr).unwrap().to_owned()
 }
 
 fn command_rust_default(channel: &str) {

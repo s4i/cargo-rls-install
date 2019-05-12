@@ -1,6 +1,8 @@
 extern crate cargo_rls_install;
 use cargo_rls_install::{
-    commands::{print_rust_and_rls_install, select_channel},
+    commands::{
+        component_add, component_add_and_get_output, print_rust_and_rls_install, select_channel,
+    },
     global::PRESENT_DATE,
     local_env::latest_txt_path,
     options::{help, parse_args, Channel},
@@ -67,9 +69,36 @@ fn main() {
         nightly(o.yes);
     }
 
+    // Default toolchain may have been changed
+    for lt in installed_toolchains() {
+        if re_channel.is_match(&lt) {
+            channel_name = lt.replace(" (default)", "");
+        }
+    }
+
+    // Install rustfmt
+    if o.rustfmt && !channel_name.is_empty() {
+        component_add(&channel_name, "rustfmt");
+    }
+
+    // Wrapper "rustup component add"
+    let comp_add_some = o.comp_add.is_some();
+    if comp_add_some && !channel_name.is_empty() {
+        let require_comp = o.comp_add.unwrap();
+        if o.rustfmt && require_comp != "rustfmt" {
+            if component_add_and_get_output(&channel_name, &require_comp).starts_with("error") {
+                println!("Not found Component: \"{}\"", require_comp);
+            }
+        } else if !o.rustfmt
+            && component_add_and_get_output(&channel_name, &require_comp).starts_with("error")
+        {
+            println!("Not found Component: \"{}\"", require_comp);
+        }
+    }
+
     // Yes only or option nothing
-    match (o.yes, o.stable, o.beta, o.nightly) {
-        (true, false, false, false) => match select_channel() {
+    match (o.yes, o.stable, o.beta, o.nightly, o.rustfmt, comp_add_some) {
+        (true, false, false, false, false, false) => match select_channel() {
             // &*: String -> &str
             Ok(ch) => match &*ch {
                 "0" | "stable" | "0:stable" => {
@@ -95,7 +124,7 @@ fn main() {
                 println!("Cancel");
             }
         },
-        (false, false, false, false) => {
+        (false, false, false, false, false, false) => {
             help();
             println!("Please input option");
         }

@@ -93,7 +93,7 @@ cargo rls-install -ysbn
 Install RLS on all Rust channels.
 The default toolchain is Nightly Rust, as the last operation on Nightly Rust is done.
 
-### Example6(v1.0.17~)
+### Example6(v1.0.17-)
 
 ```bash
 cargo rls-install -v # --view
@@ -102,16 +102,27 @@ cargo rls-install -v # --view
 Check the build status of Rust and RLS.
 This command is intended to be used only by itself.
 
+### Example7(v1.0.23-)
+
+```bash
+cargo rls-install -f # --rustfmt
+cargo rls-install -c rustfmt # --comp-add rustfmt
+```
+
+Install component(example: rustfmt). Use `rustup component add` command.
+
 ## Flags
 
 ```bash
--b, --beta       Install beta channel Rust and RLS
--h, --help       Prints help information
--n, --nightly    Install nightly channel Rust and RLS
--s, --stable     Install stable channel Rust and RLS
--V, --version    Prints version information
--v, --view       RLS build status view
--y, --yes        Pre-approval Rust and RLS install and rustup default command
+    -b, --beta       Install beta channel Rust and RLS
+    -c, --comp-add   Wrapper(rustup component add [argument])
+    -f, --rustfmt    Install rustfmt
+    -h, --help       Prints help information
+    -n, --nightly    Install nightly channel Rust and RLS
+    -s, --stable     Install stable channel Rust and RLS
+    -V, --version    Prints version information
+    -v, --view       RLS build status view
+    -y, --yes        Pre-approval Rust and RLS install and rustup default command
 ```
 
 ## Special thanks
