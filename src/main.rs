@@ -1,7 +1,8 @@
 extern crate cargo_rls_install;
 use cargo_rls_install::{
     commands::{
-        component_add, component_add_and_get_output, print_rust_and_rls_install, select_channel,
+        command_rust_default, component_add, component_add_and_get_output,
+        print_rust_and_rls_install, select_channel,
     },
     global::PRESENT_DATE,
     local_env::latest_txt_path,
@@ -25,10 +26,21 @@ fn main() {
     // Check if component name isn't empty
     let comp_add_some = o.comp_add.is_some();
 
+    // Check if default toolchain isn't empty
+    let rustup_default = o.default.is_some();
+
     // view option
     if o.view {
-        match (o.yes, o.stable, o.beta, o.nightly, o.rustfmt, comp_add_some) {
-            (false, false, false, false, false, false) => view(),
+        match (
+            o.yes,
+            o.stable,
+            o.beta,
+            o.nightly,
+            o.rustfmt,
+            comp_add_some,
+            rustup_default,
+        ) {
+            (false, false, false, false, false, false, false) => view(),
             _ => println!("Invalid option"),
         }
         println!("End");
@@ -80,12 +92,12 @@ fn main() {
     }
 
     // Install rustfmt
-    if o.rustfmt && !channel_name.is_empty() {
+    if o.rustfmt {
         component_add(&channel_name, "rustfmt");
     }
 
     // Wrapper "rustup component add"
-    if comp_add_some && !channel_name.is_empty() {
+    if comp_add_some {
         let require_comp = o.comp_add.unwrap();
         if o.rustfmt && require_comp != "rustfmt" {
             // Catch error message returned to stderr
@@ -99,9 +111,25 @@ fn main() {
         }
     }
 
-    // Yes only or option nothing
-    match (o.yes, o.stable, o.beta, o.nightly, o.rustfmt, comp_add_some) {
-        (true, false, false, false, false, false) => match select_channel() {
+    //Wrapper "rustup default [toolchain]" of Yes only or option nothing
+    match (
+        o.yes,
+        o.stable,
+        o.beta,
+        o.nightly,
+        o.rustfmt,
+        comp_add_some,
+        rustup_default,
+    ) {
+        // Wrapper "rustup default [toolchain]"
+        (_, _, _, _, _, _, true) => {
+            let toolchain = o.default.unwrap();
+            if toolchain.is_ascii() {
+                defalt_toolchain_setting(&toolchain.to_lowercase());
+            }
+        }
+        // Yes only
+        (true, false, false, false, false, false, false) => match select_channel() {
             // &*: String -> &str
             Ok(ch) => match &*ch {
                 "0" | "stable" | "0:stable" => {
@@ -127,7 +155,7 @@ fn main() {
                 println!("Cancel");
             }
         },
-        (false, false, false, false, false, false) => {
+        (false, false, false, false, false, false, false) => {
             help();
             println!("Please input option");
         }
@@ -135,6 +163,26 @@ fn main() {
     }
 
     println!("End");
+}
+
+fn defalt_toolchain_setting(toolchain_name: &str) {
+    if toolchain_name.starts_with('s') {
+        command_rust_default("stable");
+    } else if toolchain_name.starts_with('b') {
+        command_rust_default("beta");
+    } else if toolchain_name == "nightly" {
+        command_rust_default(&"nightly".to_owned());
+    } else if toolchain_name.starts_with("nightly-2") {
+        command_rust_default(&toolchain_name);
+    } else if toolchain_name.starts_with('n') {
+        let get_tail_toolchain = installed_toolchains();
+        command_rust_default(
+            &get_tail_toolchain
+                .last()
+                .unwrap_or(&"nightly".to_owned())
+                .replace(" (default)", ""),
+        );
+    }
 }
 
 fn view() {

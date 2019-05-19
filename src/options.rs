@@ -34,6 +34,12 @@ pub struct Channel {
         help = "Pre-approval Rust and RLS install and rustup default command"
     )]
     pub yes: bool,
+    #[structopt(
+        short,
+        long = "default-toolchain",
+        help = "Wrapper(rustup component add [argument])"
+    )]
+    pub default: Option<String>,
 }
 
 pub fn parse_args() -> Channel {
@@ -59,7 +65,8 @@ FLAGS:
     -y, --yes        Pre-approval Rust and RLS install and rustup default command
 
 OPTIONS:
-    -c, --comp-add <comp_add>    Wrapper(rustup component add [argument])
+    -c, --comp-add <comp_add>            Wrapper(rustup component add [argument])
+    -d, --default-toolchain <default>    Wrapper(rustup component add [argument])
     "
     );
 }

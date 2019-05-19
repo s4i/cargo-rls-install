@@ -2,7 +2,8 @@
 
 | Date      | Version | Change                                                                                                                          |
 | --------- | ------- | :------------------------------------------------------------------------------------------------------------------------------ |
-| 2019/5/12 | v1.0.24 | Fix minor bug.                                                                                                                  |
+| 2019/5/19 | v1.0.25 | Add `rustup default` wrapper.                                                                                                   |
+| 2019/5/19 | v1.0.24 | Fix minor bug.                                                                                                                  |
 | 2019/5/12 | v1.0.23 | Add `rustup component add` wrapper.                                                                                             |
 | 2019/4/20 | v1.0.22 | Follow change "eight to seven".                                                                                                 |
 | 2019/4/12 | v1.0.21 | Accept "Last available".                                                                                                        |

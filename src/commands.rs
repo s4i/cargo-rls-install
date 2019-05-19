@@ -173,7 +173,7 @@ pub fn component_add_and_get_output(channel: &str, component: &str) -> String {
     from_utf8(&output.stderr).unwrap().to_owned()
 }
 
-fn command_rust_default(channel: &str) {
+pub fn command_rust_default(channel: &str) {
     println!("\n$ rustup default {}", channel);
     Command::new("rustup")
         .args(&["default", channel])
