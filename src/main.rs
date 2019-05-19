@@ -99,15 +99,9 @@ fn main() {
     // Wrapper "rustup component add"
     if comp_add_some {
         let require_comp = o.comp_add.unwrap();
-        if o.rustfmt && require_comp != "rustfmt" {
+        if require_comp != "rustfmt" || !o.rustfmt {
             // Catch error message returned to stderr
-            if component_add_and_get_output(&channel_name, &require_comp).starts_with("error") {
-                println!("Not found Component: \"{}\"", require_comp);
-            }
-        } else if !o.rustfmt
-            && component_add_and_get_output(&channel_name, &require_comp).starts_with("error")
-        {
-            println!("Not found Component: \"{}\"", require_comp);
+            output_command_message(&channel_name, &require_comp);
         }
     }
 
@@ -161,8 +155,17 @@ fn main() {
         }
         _ => (),
     }
-
     println!("End");
+}
+
+fn output_command_message(channel_name: &str, require_comp: &str) {
+    let message = component_add_and_get_output(&channel_name, &require_comp);
+    if message.starts_with("error") {
+        println!("Not found Component: \"{}\"", require_comp);
+    } else {
+        println!("{}", message.trim_end());
+        println!("OK");
+    }
 }
 
 fn defalt_toolchain_setting(toolchain_name: &str) {
