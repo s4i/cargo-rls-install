@@ -20,25 +20,17 @@ pub struct Channel {
     pub nightly: bool,
     #[structopt(short, long, help = "RLS build status view")]
     pub view: bool,
-    #[structopt(
-        short = "c",
-        long = "comp-add",
-        help = "Wrapper(rustup component add [argument])"
-    )]
+    #[structopt(short = "c", long = "comp-add", help = "Wrapper(rustup component add)")]
     pub comp_add: Option<String>,
     #[structopt(short = "f", long = "rustfmt", help = "Install rustfmt")]
     pub rustfmt: bool,
     #[structopt(
         short,
         long,
-        help = "Pre-approval Rust and RLS install and rustup default command"
+        help = "Pre-approval: Install Rust, RLS and change toolchain"
     )]
     pub yes: bool,
-    #[structopt(
-        short,
-        long = "default-toolchain",
-        help = "Wrapper(rustup component add [argument])"
-    )]
+    #[structopt(short, long = "default-toolchain", help = "Wrapper(rustup default)")]
     pub default: Option<String>,
 }
 
@@ -62,11 +54,11 @@ FLAGS:
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
     -v, --view       RLS build status view
-    -y, --yes        Pre-approval Rust and RLS install and rustup default command
+    -y, --yes        Pre-approval: Install Rust, RLS and change toolchain
 
 OPTIONS:
-    -c, --comp-add <comp_add>            Wrapper(rustup component add [argument])
-    -d, --default-toolchain <default>    Wrapper(rustup component add [argument])
+    -c, --comp-add <comp_add>            Wrapper(rustup component add)
+    -d, --default-toolchain <default>    Wrapper(rustup default)
     "
     );
 }

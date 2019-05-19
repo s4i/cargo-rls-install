@@ -125,11 +125,11 @@ FLAGS:
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
     -v, --view       RLS build status view
-    -y, --yes        Pre-approval Rust and RLS install and rustup default command
+    -y, --yes        Pre-approval: Install Rust, RLS and change toolchain
 
 OPTIONS:
-    -c, --comp-add <comp_add>            Wrapper(rustup component add [argument])
-    -d, --default-toolchain <default>    Wrapper(rustup component add [argument])
+    -c, --comp-add <comp_add>            Wrapper(rustup component add)
+    -d, --default-toolchain <default>    Wrapper(rustup default)
 ```
 
 ## Special thanks
