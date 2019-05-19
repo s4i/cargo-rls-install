@@ -1,4 +1,3 @@
-extern crate cargo_rls_install;
 use cargo_rls_install::{
     commands::{
         command_rust_default, component_add, component_add_and_get_output,
