@@ -22,10 +22,13 @@ fn main() {
     // lib.rs
     let o: Channel = parse_args();
 
+    // Check if component name isn't empty
+    let comp_add_some = o.comp_add.is_some();
+
     // view option
     if o.view {
-        match (o.yes, o.stable, o.beta, o.nightly) {
-            (false, false, false, false) => view(),
+        match (o.yes, o.stable, o.beta, o.nightly, o.rustfmt, comp_add_some) {
+            (false, false, false, false, false, false) => view(),
             _ => println!("Invalid option"),
         }
         println!("End");
@@ -82,10 +85,10 @@ fn main() {
     }
 
     // Wrapper "rustup component add"
-    let comp_add_some = o.comp_add.is_some();
     if comp_add_some && !channel_name.is_empty() {
         let require_comp = o.comp_add.unwrap();
         if o.rustfmt && require_comp != "rustfmt" {
+            // Catch error message returned to stderr
             if component_add_and_get_output(&channel_name, &require_comp).starts_with("error") {
                 println!("Not found Component: \"{}\"", require_comp);
             }
@@ -155,21 +158,19 @@ fn view() {
         }
     }
 
-    // web status
-    let map = PRESENT_DATE.lock().unwrap();
-
     /* Status table */
     println!(" * Rust information");
 
     // web status
+    let map = PRESENT_DATE.lock().unwrap();
     let mut seven_days = Vec::new();
     for (date, _) in map.iter() {
         seven_days.push(date);
     }
 
     let mut has_seven_days_before = false;
-    for lt in &local_nightlys {
-        if !seven_days.contains(&lt) {
+    for ln in &local_nightlys {
+        if !seven_days.contains(&ln) {
             has_seven_days_before = true;
         }
     }
@@ -406,14 +407,14 @@ fn installed_nightly() -> Result<Vec<NaiveDate>, String> {
     }
 }
 
-fn text_write(web_latest: &str) {
+fn text_write(nightly_date: &str) {
     let writer_opt = fs::OpenOptions::new()
         .write(true)
         .append(true)
         .open(latest_txt_path(BUILD_IN_TEXT_NAME))
         .expect("Can't open file");
     let mut writer = BufWriter::new(writer_opt);
-    writeln!(writer, "{}", web_latest).expect("File write failed");
+    writeln!(writer, "{}", nightly_date).expect("File write failed");
 }
 
 fn local_system_rust_version() -> String {

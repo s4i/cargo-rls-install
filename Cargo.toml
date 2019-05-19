@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rls-install"
-version = "1.0.23"
+version = "1.0.24"
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"
@@ -28,7 +28,7 @@ include = [
 
 [dependencies]
 regex = "1.1.6"
-reqwest = "0.9.16"
+reqwest = "0.9.17"
 select = "0.4.2"
 lazy_static = "1.3.0"
 structopt = { version = "0.2", default-features = false }

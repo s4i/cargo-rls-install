@@ -46,18 +46,20 @@ pub fn help() {
     println!(
         r"
 USAGE:
-    cargo-rls-install.exe rls-install [FLAGS]
+    cargo-rls-install.exe rls-install [FLAGS] [OPTIONS]
 
 FLAGS:
     -b, --beta       Install beta channel Rust and RLS
-    -c, --comp-add   Wrapper(rustup component add [argument])
-    -f, --rustfmt    Install rustfmt
     -h, --help       Prints help information
     -n, --nightly    Install nightly channel Rust and RLS
+    -f, --rustfmt    Install rustfmt
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
     -v, --view       RLS build status view
     -y, --yes        Pre-approval Rust and RLS install and rustup default command
+
+OPTIONS:
+    -c, --comp-add <comp_add>    Wrapper(rustup component add [argument])
     "
     );
 }
