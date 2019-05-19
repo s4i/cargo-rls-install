@@ -222,6 +222,7 @@ fn view() {
     for ln in &local_nightlys {
         if !seven_days.contains(&ln) {
             has_seven_days_before = true;
+            break;
         }
     }
 
