@@ -7,7 +7,6 @@ use std::result::Result;
 
 pub fn latest_txt_path(latest_file: &str) -> PathBuf {
     let mut own_path = cargo_home();
-    // println!("{}", name_hyphen_version(&own_path));
     own_path.push(format!(
         "{}{}{}",
         env!("CARGO_PKG_NAME"),
@@ -20,19 +19,15 @@ pub fn latest_txt_path(latest_file: &str) -> PathBuf {
 
 fn cargo_home() -> PathBuf {
     let mut path = PathBuf::new();
-    // path.push(home_dir().expect("Not found home directory"));
-    // path.push(".cargo"); // $home/.cargo
     path.push(env!("CARGO_HOME"));
     path.push("registry");
     path.push("src");
-    if path.is_dir() {
-        match github_folder(&path) {
-            // $home/.cargo/registry/src/github.com-*/
-            Ok(dir) => path.push(dir),
-            Err(e) => {
-                println!("{:?}", e);
-                exit(0);
-            }
+    match github_folder(&path) {
+        // $home/.cargo/registry/src/github.com-*/
+        Ok(dir) => path.push(dir),
+        Err(e) => {
+            println!("{:?}", e);
+            exit(0);
         }
     }
     // $home/.cargo/registry/src/github.com-*/cargo-rls-install-{version}/{build-in-text-name}
