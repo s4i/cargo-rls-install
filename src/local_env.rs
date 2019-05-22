@@ -1,3 +1,4 @@
+use dirs::home_dir;
 use failure::err_msg;
 use regex::Regex;
 use std::fs;
@@ -19,7 +20,8 @@ pub fn latest_txt_path(latest_file: &str) -> PathBuf {
 
 fn cargo_home() -> PathBuf {
     let mut path = PathBuf::new();
-    path.push(env!("CARGO_HOME"));
+    path.push(home_dir().unwrap());
+    path.push(".cargo");
     path.push("registry");
     path.push("src");
     match github_folder(&path) {

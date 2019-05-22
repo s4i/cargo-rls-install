@@ -181,3 +181,47 @@ pub fn command_rust_default(channel: &str) {
         .expect("Abort installation");
     println!("OK");
 }
+
+pub fn command_rust_uninstall(channel: &str) {
+    println!("\n$ rustup uninstall {}", channel);
+    match excecution(false) {
+        Ok(()) => {
+            Command::new("rustup")
+                .args(&["uninstall", channel])
+                .status()
+                .expect("Abort installation");
+        }
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+    println!("OK");
+}
+
+pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
+    println!();
+    println!(" * Uninstall list\n");
+    for dt in &dated_nightly {
+        println!(" => {}", dt);
+    }
+    println!(" -------------------------------------------\n");
+    for dt in &dated_nightly {
+        println!("$ rustup uninstall {}", dt);
+    }
+    match excecution(false) {
+        Ok(()) => {
+            for dt in &dated_nightly {
+                Command::new("rustup")
+                    .args(&["uninstall", dt])
+                    .status()
+                    .expect("Abort installation");
+            }
+        }
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+    println!("OK");
+}

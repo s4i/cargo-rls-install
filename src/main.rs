@@ -1,7 +1,7 @@
 use cargo_rls_install::{
     commands::{
-        command_rust_default, component_add, component_add_and_get_output,
-        print_rust_and_rls_install, select_channel,
+        command_rust_default, command_rust_multiple_uninstall, command_rust_uninstall,
+        component_add, component_add_and_get_output, print_rust_and_rls_install, select_channel,
     },
     global::PRESENT_DATE,
     local_env::latest_txt_path,
@@ -24,9 +24,25 @@ fn main() {
 
     // Check if component name isn't empty
     let comp_add_some = o.comp_add.is_some();
-
-    // Check if default toolchain isn't empty
     let rustup_default = o.default.is_some();
+    let rustup_uninstall = o.uninstall.is_some();
+
+    let mut has_stable = false;
+    let mut has_beta = false;
+
+    let re_channel = Regex::new(r"(default)").unwrap();
+    let mut default_channel_name = String::new();
+
+    for lt in installed_toolchains() {
+        if lt.starts_with("stable-") {
+            has_stable = true;
+        } else if lt.starts_with("beta-") {
+            has_beta = true;
+        }
+        if re_channel.is_match(&lt) {
+            default_channel_name = lt.replace(" (default)", "");
+        }
+    }
 
     // view option
     if o.view {
@@ -38,29 +54,13 @@ fn main() {
             o.rustfmt,
             comp_add_some,
             rustup_default,
+            rustup_uninstall,
         ) {
-            (false, false, false, false, false, false, false) => view(),
+            (false, false, false, false, false, false, false, false) => view(&default_channel_name),
             _ => println!("Invalid option"),
         }
         println!("End");
         exit(0);
-    }
-
-    let mut has_stable = false;
-    let mut has_beta = false;
-
-    let re_channel = Regex::new(r"(default)").unwrap();
-    let mut channel_name = String::new();
-
-    for lt in installed_toolchains() {
-        if lt.starts_with("stable-") {
-            has_stable = true;
-        } else if lt.starts_with("beta-") {
-            has_beta = true;
-        }
-        if re_channel.is_match(&lt) {
-            channel_name = lt;
-        }
     }
 
     // Stable choice
@@ -69,13 +69,18 @@ fn main() {
             "stable",
             o.yes,
             has_stable,
-            channel_name.starts_with("stable-"),
+            default_channel_name.starts_with("stable-"),
         );
     }
 
     // Beta choice
     if o.beta {
-        print_rust_and_rls_install("beta", o.yes, has_beta, channel_name.starts_with("beta-"));
+        print_rust_and_rls_install(
+            "beta",
+            o.yes,
+            has_beta,
+            default_channel_name.starts_with("beta-"),
+        );
     }
 
     // Nightly choice
@@ -86,13 +91,13 @@ fn main() {
     // Default toolchain may have been changed
     for lt in installed_toolchains() {
         if re_channel.is_match(&lt) {
-            channel_name = lt.replace(" (default)", "");
+            default_channel_name = lt.replace(" (default)", "");
         }
     }
 
     // Install rustfmt
     if o.rustfmt {
-        component_add(&channel_name, "rustfmt");
+        component_add(&default_channel_name, "rustfmt");
     }
 
     // Wrapper "rustup component add"
@@ -100,11 +105,31 @@ fn main() {
         let require_comp = o.comp_add.unwrap();
         if require_comp != "rustfmt" || !o.rustfmt {
             // Catch error message returned to stderr
-            output_command_message(&channel_name, &require_comp);
+            output_command_message(&default_channel_name, &require_comp);
         }
     }
 
-    //Wrapper "rustup default [toolchain]" of Yes only or option nothing
+    // Wrapper "rustup default [toolchain]"
+    if rustup_default {
+        let toolchain = o.default.unwrap();
+        if toolchain.is_ascii() {
+            change_defalt_toolchain(&toolchain.to_lowercase());
+        } else {
+            println!("Nonexistent toolchain");
+        }
+    }
+
+    // Wrapper "rustup uninstall [toolchain]"
+    if rustup_uninstall {
+        let toolchain = o.uninstall.unwrap();
+        if toolchain.is_ascii() {
+            uninstall_toolchain(&toolchain.to_lowercase(), &default_channel_name);
+        } else {
+            println!("Nonexistent toolchain");
+        }
+    }
+
+    // Yes only or option nothing
     match (
         o.yes,
         o.stable,
@@ -113,16 +138,10 @@ fn main() {
         o.rustfmt,
         comp_add_some,
         rustup_default,
+        rustup_uninstall,
     ) {
-        // Wrapper "rustup default [toolchain]"
-        (_, _, _, _, _, _, true) => {
-            let toolchain = o.default.unwrap();
-            if toolchain.is_ascii() {
-                defalt_toolchain_setting(&toolchain.to_lowercase());
-            }
-        }
         // Yes only
-        (true, false, false, false, false, false, false) => match select_channel() {
+        (true, false, false, false, false, false, false, false) => match select_channel() {
             // &*: String -> &str
             Ok(ch) => match &*ch {
                 "0" | "stable" | "0:stable" => {
@@ -130,7 +149,7 @@ fn main() {
                         "stable",
                         o.yes,
                         has_stable,
-                        channel_name.starts_with("stable-"),
+                        default_channel_name.starts_with("stable-"),
                     );
                 }
                 "1" | "beta" | "1:beta" => {
@@ -138,7 +157,7 @@ fn main() {
                         "beta",
                         o.yes,
                         has_beta,
-                        channel_name.starts_with("beta-"),
+                        default_channel_name.starts_with("beta-"),
                     );
                 }
                 "2" | "nightly" | "2:nightly" => nightly(o.yes),
@@ -148,7 +167,7 @@ fn main() {
                 println!("Cancel");
             }
         },
-        (false, false, false, false, false, false, false) => {
+        (false, false, false, false, false, false, false, false) => {
             help();
             println!("Please input option");
         }
@@ -157,37 +176,7 @@ fn main() {
     println!("End");
 }
 
-fn output_command_message(channel_name: &str, require_comp: &str) {
-    let message = component_add_and_get_output(&channel_name, &require_comp);
-    if message.starts_with("error") {
-        println!("Not found Component: \"{}\"", require_comp);
-    } else {
-        println!("{}", message.trim_end());
-        println!("OK");
-    }
-}
-
-fn defalt_toolchain_setting(toolchain_name: &str) {
-    if toolchain_name.starts_with('s') {
-        command_rust_default("stable");
-    } else if toolchain_name.starts_with('b') {
-        command_rust_default("beta");
-    } else if toolchain_name == "nightly" {
-        command_rust_default(&"nightly".to_owned());
-    } else if toolchain_name.starts_with("nightly-2") {
-        command_rust_default(&toolchain_name);
-    } else if toolchain_name.starts_with('n') {
-        let get_tail_toolchain = installed_toolchains();
-        command_rust_default(
-            &get_tail_toolchain
-                .last()
-                .unwrap_or(&"nightly".to_owned())
-                .replace(" (default)", ""),
-        );
-    }
-}
-
-fn view() {
+fn view(default_toolchain: &str) {
     /* Local system rust version */
     let (_, platform_name) = sysroot_regex();
 
@@ -227,51 +216,60 @@ fn view() {
     }
 
     if has_seven_days_before {
-        println!(" ---------------------------------");
-        println!(" |    Old Rust(Before 8 days)    |");
-        println!(" ---------------------------------");
-        println!(" | {:<19} {:^10}|", "Build date", "");
-        println!(" ---------------------------------");
+        println!(" --------------------------------");
+        println!(" |    Old Rust(Before 8 days)   |");
+        println!(" --------------------------------");
+        println!(" | {:<19} {:^9}|", "Build date", "");
+        println!(" --------------------------------");
 
         for tc in &local_nightlys {
             if !seven_days.contains(&tc) {
-                println!(
-                    " | {:<19} {:^10}| <= Installed",
-                    format!("{}{}", "nightly-", tc),
-                    ""
-                );
+                let build_date = format!("{}{}", "nightly-", tc);
+                if default_toolchain.starts_with(&build_date) {
+                    println!(" | {:<19} {:^9}| <= Installed(Default)", build_date, "");
+                } else {
+                    println!(
+                        " | {:<19} {:^9}| <= Installed",
+                        format!("{}{}", "nightly-", tc),
+                        ""
+                    );
+                }
             }
         }
+        println!(" --------------------------------");
     }
 
-    println!(" ---------------------------------");
-    println!(" |       Rust & RLS status       |");
-    println!(" ---------------------------------");
-    println!(" | {:<19}|{:^10}|", "Build date", "Status");
-    println!(" ---------------------------------");
+    println!(" --------------------------------");
+    println!(" | {:<19}|{:^9}|", "Build date", "Status");
+    println!(" --------------------------------");
 
     for (date, status) in map.iter() {
         if local_nightlys.contains(&date) {
-            println!(
-                " | {:<19}|{:^10}| <= Installed",
-                format!("{}{}", "nightly-", date),
-                status
-            );
+            let build_date = format!("{}{}", "nightly-", date);
+            if default_toolchain.starts_with(&build_date) {
+                println!(" | {:<19}|{:^9}| <= Installed(Default)", build_date, status);
+            } else {
+                println!(
+                    " | {:<19}|{:^9}| <= Installed",
+                    format!("{}{}", "nightly-", date),
+                    status
+                );
+            }
         } else if date.starts_with("Last") {
-            println!(" ---------------------------------");
+            println!(" --------------------------------");
             println!(
-                " |{:^31}|",
+                " |{:^30}|",
                 format!("{}{}{}", date, ": ".to_owned(), status)
             );
         } else {
             println!(
-                " | {:<19}|{:^10}|",
+                " | {:<19}|{:^9}|",
                 format!("{}{}", "nightly-", date),
                 status
             );
         }
     }
-    println!(" ---------------------------------");
+    println!(" --------------------------------");
 }
 
 fn nightly(yes: bool) {
@@ -510,23 +508,20 @@ fn sysroot_regex() -> (String, String) {
             };
 
             if now_build_date.is_empty() {
-                println!("\n * Default use Rust toolchain: nightly\n");
+                println!("\n * Default use toolchain: nightly\n");
             } else {
-                println!(
-                    "\n * Default use Rust toolchain: nightly-{}\n",
-                    now_build_date
-                );
+                println!("\n * Default use toolchain: nightly-{}\n", now_build_date);
             }
             (now_build_date, platform(&no_head))
         }
         (false, true, false) => {
-            println!("\n * Default use Rust toolchain: beta\n");
+            println!("\n * Default use toolchain: beta\n");
             let no_head = re_beta.replace(path, "");
             let platform_name = platform(&no_head);
             (String::new(), platform_name)
         }
         (false, false, true) => {
-            println!("\n * Default use Rust toolchain: stable\n");
+            println!("\n * Default use toolchain: stable\n");
             let no_head = re_stable.replace(path, "");
             (String::new(), platform(&no_head))
         }
@@ -576,4 +571,115 @@ pub fn installed_toolchains() -> Vec<String> {
         .split('\n')
         .map(std::borrow::ToOwned::to_owned)
         .collect::<Vec<_>>()
+}
+
+fn output_command_message(default_channel_name: &str, require_comp: &str) {
+    let message = component_add_and_get_output(&default_channel_name, &require_comp);
+    if message.starts_with("error") {
+        println!("Not found component: \"{}\"", require_comp);
+    } else {
+        println!("{}", message.trim_end());
+        println!("OK");
+    }
+}
+
+fn change_defalt_toolchain(toolchain_name: &str) {
+    if toolchain_name.starts_with('s') {
+        command_rust_default("stable");
+    } else if toolchain_name.starts_with("beta-") {
+        command_rust_default(&toolchain_name);
+    } else if toolchain_name.starts_with('b') {
+        command_rust_default("beta");
+    } else if toolchain_name == "nightly" {
+        command_rust_default(&"nightly".to_owned());
+    } else if toolchain_name.starts_with("nightly-") {
+        command_rust_default(&toolchain_name);
+    } else if toolchain_name.starts_with('n') {
+        let get_tail_toolchain = installed_toolchains();
+        command_rust_default(
+            &get_tail_toolchain
+                .last()
+                .unwrap_or(&"nightly".to_owned())
+                .replace(" (default)", ""),
+        );
+    } else {
+        println!("Not found toolchain: \"{}\"", toolchain_name);
+    }
+}
+
+// If default toolchain, don't uninstall
+fn uninstall_toolchain(toolchain_name: &str, default_channel_name: &str) {
+    if toolchain_name.starts_with('s') {
+        // Check default toolchain
+        if !default_channel_name.starts_with('s') {
+            command_rust_uninstall("stable");
+        } else {
+            println!("Currently set to default toolchain");
+        }
+    } else if toolchain_name.starts_with("beta-") {
+        // Check default toolchain
+        if !default_channel_name.starts_with(&toolchain_name) {
+            command_rust_uninstall(&toolchain_name);
+        } else {
+            println!("Currently set to default toolchain");
+        }
+    } else if toolchain_name.starts_with('b') {
+        // Check default toolchain
+        if !default_channel_name.starts_with('b') {
+            command_rust_uninstall("beta");
+        } else {
+            println!("Currently set to default toolchain");
+        }
+    } else if toolchain_name.starts_with("nightly-") {
+        // Check default toolchain
+        if !default_channel_name.starts_with(&toolchain_name) {
+            command_rust_uninstall(&toolchain_name);
+        } else {
+            println!("Currently set to default toolchain");
+        }
+    } else if toolchain_name.starts_with('n') {
+        command_rust_uninstall(&"nightly".to_owned());
+    } else if toolchain_name == "a" || toolchain_name == "all" {
+        uninstall_all_dated_nightly();
+    } else {
+        println!("Not found toolchain: \"{}\"", toolchain_name);
+    }
+}
+
+fn uninstall_all_dated_nightly() {
+    let mut dated_nightly = vec![];
+    let re_channel = Regex::new(r"(default)").unwrap();
+    let re_nightly = Regex::new(r"nightly-\d{4}-\d{2}-\d{2}-").unwrap();
+
+    for val in installed_toolchains() {
+        if re_nightly.is_match(&val) {
+            dated_nightly.push(val);
+        }
+    }
+
+    if dated_nightly.len() >= 2 {
+        // Eliminate the latest
+        dated_nightly.pop();
+    }
+
+    if dated_nightly.is_empty() {
+        println!("Can't find what to uninstall.");
+        println!("Note: Nightly rust of latest version isn't eligible for uninstallation.");
+    } else {
+        let mut uninstall_count = 0;
+        let mut uninstall_targets = vec![];
+        for dn in dated_nightly {
+            if !re_channel.is_match(&dn) {
+                uninstall_targets.push(dn);
+                uninstall_count += 1;
+            }
+        }
+        // Case: When dated nightly rust was two installed, default toolchain and latest dated nightly
+        if uninstall_count == 0 {
+            println!("Can't find what to uninstall.");
+            println!("Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.");
+        } else {
+            command_rust_multiple_uninstall(uninstall_targets);
+        }
+    }
 }

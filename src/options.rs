@@ -20,9 +20,9 @@ pub struct Channel {
     pub nightly: bool,
     #[structopt(short, long, help = "RLS build status view")]
     pub view: bool,
-    #[structopt(short = "c", long = "comp-add", help = "Wrapper(rustup component add)")]
+    #[structopt(short, long = "component-add", help = "Wrapper(rustup component add)")]
     pub comp_add: Option<String>,
-    #[structopt(short = "f", long = "rustfmt", help = "Install rustfmt")]
+    #[structopt(short = "f", long, help = "Install rustfmt")]
     pub rustfmt: bool,
     #[structopt(
         short,
@@ -32,6 +32,12 @@ pub struct Channel {
     pub yes: bool,
     #[structopt(short, long = "default-toolchain", help = "Wrapper(rustup default)")]
     pub default: Option<String>,
+    #[structopt(
+        short,
+        long = "uninstall-toolchain",
+        help = "Wrapper(rustup uninstall)"
+    )]
+    pub uninstall: Option<String>,
 }
 
 pub fn parse_args() -> Channel {
@@ -57,8 +63,9 @@ FLAGS:
     -y, --yes        Pre-approval: Install Rust, RLS and change toolchain
 
 OPTIONS:
-    -c, --comp-add <comp_add>            Wrapper(rustup component add)
-    -d, --default-toolchain <default>    Wrapper(rustup default)
+    -c, --component-add <comp_add>           Wrapper(rustup component add)
+    -d, --default-toolchain <default>        Wrapper(rustup default)
+    -u, --uninstall-toolchain <uninstall>    Wrapper(rustup uninstall)
     "
     );
 }

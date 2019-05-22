@@ -118,6 +118,8 @@ Install component(example: rustfmt). Use `rustup component add` command.
 cargo rls-install -ds
 # Use beta
 cargo rls-install -db
+# Use target beta(v1.0.28-)
+cargo rls-install -dbeta-2019-05-19
 # Use nightly
 cargo rls-install -dnightly
 # Use latest nightly rust toolchain
@@ -127,6 +129,26 @@ cargo rls-install -dnightly-2019-05-21
 ```
 
 Change default toolchain. Use `rustup default` command.
+
+### Example9(v1.0.28-)
+
+```bash
+# Uninstall stable
+cargo rls-install -us
+# Uninstall beta
+cargo rls-install -ub
+# Uninstall target beta
+cargo rls-install -ubbeta-2019-05-19
+# Uninstall nightly
+cargo rls-install -un
+# Uninstall target nightly
+cargo rls-install -unightly-2019-5-21
+# Uninstall all but the latest nightly rust dated
+cargo rls-install -ua # a or all
+```
+
+Uninstall toolchain. Use `rustup uninstall` command.  
+Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.
 
 ## Flags
 
@@ -145,8 +167,9 @@ FLAGS:
     -y, --yes        Pre-approval: Install Rust, RLS and change toolchain
 
 OPTIONS:
-    -c, --comp-add <comp_add>            Wrapper(rustup component add)
-    -d, --default-toolchain <default>    Wrapper(rustup default)
+    -c, --component-add <comp_add>           Wrapper(rustup component add)
+    -d, --default-toolchain <default>        Wrapper(rustup default)
+    -u, --uninstall-toolchain <uninstall>    Wrapper(rustup uninstall)
 ```
 
 ## Special thanks
