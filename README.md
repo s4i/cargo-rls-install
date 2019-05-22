@@ -111,7 +111,7 @@ cargo rls-install -c rustfmt # --comp-add rustfmt
 
 Install component(example: rustfmt). Use `rustup component add` command.
 
-### Example7(v1.0.25-)
+### Example8(v1.0.25-)
 
 ```bash
 # Use stable
