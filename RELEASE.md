@@ -2,7 +2,7 @@
 
 | Date      | Version | Change                                                                                                                          |
 | --------- | ------- | :------------------------------------------------------------------------------------------------------------------------------ |
-| 2019/5/22 | v1.0.28 | Add 'u' option(`rustup uninstall` wrapper) and change env!, added dirs library.                                                 |
+| 2019/5/23 | v1.0.28 | Add 'u' option(`rustup uninstall` wrapper) and change env!, added dirs library.                                                 |
 | 2019/5/21 | v1.0.27 | Add description of default-toolchain option.                                                                                    |
 | 2019/5/20 | v1.0.26 | Improve help.                                                                                                                   |
 | 2019/5/19 | v1.0.25 | Add `rustup default` wrapper.                                                                                                   |
