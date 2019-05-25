@@ -215,8 +215,9 @@ fn view(default_toolchain: &str) {
         }
     }
 
+    println!(" --------------------------------");
+
     if has_seven_days_before {
-        println!(" --------------------------------");
         println!(" |    Old Rust(Before 8 days)   |");
         println!(" --------------------------------");
         println!(" | {:<19} {:^9}|", "Build date", "");
@@ -239,6 +240,7 @@ fn view(default_toolchain: &str) {
         println!(" --------------------------------");
     }
 
+    println!(" |  One week Rust & RLS status  |");
     println!(" --------------------------------");
     println!(" | {:<19}|{:^9}|", "Build date", "Status");
     println!(" --------------------------------");
