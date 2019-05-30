@@ -106,7 +106,7 @@ This command is intended to be used only by itself.
 
 ```bash
 cargo rls-install -f # --rustfmt
-cargo rls-install -c rustfmt # --comp-add rustfmt
+cargo rls-install -c rustfmt # --component-add rustfmt
 ```
 
 Install component(example: rustfmt). Use `rustup component add` command.
@@ -115,17 +115,17 @@ Install component(example: rustfmt). Use `rustup component add` command.
 
 ```bash
 # Use stable
-cargo rls-install -ds
+cargo rls-install -d s
 # Use beta
-cargo rls-install -db
+cargo rls-install -d b
 # Use target beta(v1.0.28-)
-cargo rls-install -dbeta-2019-05-19
+cargo rls-install -d beta-2019-05-19
 # Use nightly
-cargo rls-install -dnightly
+cargo rls-install -d nightly
 # Use latest nightly rust toolchain
-cargo rls-install -dn
+cargo rls-install -d n
 # Use target nightly rust toolchain
-cargo rls-install -dnightly-2019-05-21
+cargo rls-install -d nightly-2019-05-21
 ```
 
 Change default toolchain. Use `rustup default` command.
@@ -134,17 +134,17 @@ Change default toolchain. Use `rustup default` command.
 
 ```bash
 # Uninstall stable
-cargo rls-install -us
+cargo rls-install -u s
 # Uninstall beta
-cargo rls-install -ub
+cargo rls-install -u b
 # Uninstall target beta
-cargo rls-install -ubbeta-2019-05-19
+cargo rls-install -u bbeta-2019-05-19
 # Uninstall nightly
-cargo rls-install -un
+cargo rls-install -u n
 # Uninstall target nightly
-cargo rls-install -unightly-2019-5-21
+cargo rls-install -u nightly-2019-5-21
 # Uninstall all but the latest nightly rust dated
-cargo rls-install -ua # a or all
+cargo rls-install -u a # a or all
 ```
 
 Uninstall toolchain. Use `rustup uninstall` command.  
