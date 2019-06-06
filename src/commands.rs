@@ -8,7 +8,7 @@ fn excecution(yes: bool) -> Result<()> {
         stdout().flush().unwrap();
         let mut buf = String::new();
         stdin().read_line(&mut buf)?;
-        match buf.trim().to_lowercase() {
+        match buf.to_lowercase().trim() {
             "" | "y" | "yes" => (),
             _ => {
                 println!("Cancel");
