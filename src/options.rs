@@ -5,7 +5,7 @@ enum Cargo {
     #[structopt(
         name = "rls-install",
         about = "Install the Rust and Rust Language Server",
-        author = ""
+        author = " "
     )]
     Install(Channel),
 }

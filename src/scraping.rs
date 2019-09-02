@@ -1,21 +1,23 @@
 use crate::global::PRESENT_DATE;
 use select::document::Document;
 use select::predicate::{Attr, Name};
+use std::result::Result;
 
 // Trait: RustupCompenentsHistory
 // Use URL or String
 // HTML(table tag) scraping
 pub trait RustupCompenentsHistory {
-    fn rustup_components_history(&self);
+    fn rustup_components_history(&self) -> Result<(), Box<dyn std::error::Error>>;
     fn scraping(document: Document);
 }
 
 impl RustupCompenentsHistory for &str {
-    fn rustup_components_history(&self) {
+    fn rustup_components_history(&self) -> Result<(), Box<dyn std::error::Error>> {
         let url = self as &str;
-        let resp = reqwest::get(url).expect("Can't get response");
+        let resp = reqwest::get(url)?;
         let document = Document::from_read(resp).expect("Data read failed");
         Self::scraping(document);
+        Ok(())
     }
 
     fn scraping(document: Document) {
@@ -28,7 +30,7 @@ impl RustupCompenentsHistory for &str {
         let build_status = document
             .find(Attr("scope", "row"))
             .find(|x| x.text() == "rls")
-            .expect("iter to string failed or not found web page")
+            .unwrap()
             .parent()
             .unwrap()
             .find(Name("td"))

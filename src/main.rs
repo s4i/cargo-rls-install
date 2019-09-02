@@ -181,9 +181,13 @@ fn view(default_toolchain: &str) {
     let (_, platform_name) = sysroot_regex();
 
     /* Search url decision and Scraping */
-    url_decision(&platform_name)
+    match url_decision(&platform_name)
         .as_str()
-        .rustup_components_history();
+        .rustup_components_history()
+    {
+        Ok(()) => (),
+        Err(_) => println!(" >>> May not be connected to the network\n"),
+    }
 
     // local info
     let mut local_nightlys = vec![];
@@ -279,63 +283,86 @@ fn nightly(yes: bool) {
     let (now_build_date, platform_name) = sysroot_regex();
 
     // Get web page date(nightly-"Date" store) - global variable
-    url_decision(&platform_name)
+    let mut disconn = false;
+
+    match url_decision(&platform_name)
         .as_str()
-        .rustup_components_history();
-
-    // Get text date(nightly-"Date" store)
-    let mut latest_txt_lines = Vec::new();
-    match latest_text_lines() {
-        Ok(text_date) => latest_txt_lines = text_date,
-        Err(e) => println!("{:?}", e),
-    };
-
-    // line tail(=latest date) get
-    let text_latest = latest_txt_lines.last().unwrap(); // get last line(latest)
-    let chrono_text =
-        NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("Parse error: NaiveData type");
-
-    // Display
-    println!(" {:<20} Status", "Build date");
-    println!(" -----------------------------");
-
-    let mut present_vec = Vec::new();
-
-    // global variable
-    let map = PRESENT_DATE.lock().unwrap();
-
-    for (date, status) in map.iter() {
-        if !date.starts_with("Last") {
-            println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
-        }
-        if status == "present" {
-            present_vec.push(
-                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type"),
-            );
+        .rustup_components_history()
+    {
+        Ok(()) => (),
+        Err(_) => {
+            disconn = true;
+            println!(" >>> May not be connected to the network");
         }
     }
 
-    println!(" -----------------------------");
+    // Get web page date
+    let mut web_latest = String::new();
 
-    let web_latest = if !present_vec.is_empty() {
-        present_vec
-            .into_iter()
-            .max()
-            .unwrap()
-            .format("%F")
-            .to_string()
-    } else {
-        // Seven days missing all
-        // Rust update unavailable
-        println!("\nFor RLS, unfortunate 7 days");
-        println!("It is impossible to find the latest version");
-        println!("The following version is written in the built-in text");
-        String::new()
+    // Get text date(nightly-"Date" store)
+    let mut latest_txt_lines = Vec::new();
+
+    if let Ok(text_date) = latest_text_lines() {
+        latest_txt_lines = text_date
     };
 
-    if text_latest.is_empty() {
-        println!("Can't search Rust and RLS latest version");
-        exit(1);
+    // line tail(=latest date) get
+    let text_latest = if !latest_txt_lines.is_empty() {
+        latest_txt_lines.last().unwrap().to_string()
+    } else {
+        "".to_string()
+    };
+
+    // get last line(latest)
+    let chrono_text = if !text_latest.is_empty() {
+        NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("Parse error: NaiveData type")
+    } else {
+        NaiveDate::from_ymd(2018, 12, 31)
+    };
+
+    if !disconn {
+        let mut present_vec = Vec::new();
+
+        // global variable
+        let map = PRESENT_DATE.lock().unwrap();
+
+        // Display
+        println!(" {:<20} Status", "Build date");
+        println!(" -----------------------------");
+        for (date, status) in map.iter() {
+            if !date.starts_with("Last") {
+                println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
+            }
+            if status == "present" {
+                present_vec.push(
+                    NaiveDate::parse_from_str(date, "%Y-%m-%d")
+                        .expect("Parse error: NaiveData type"),
+                );
+            }
+        }
+        println!(" -----------------------------");
+
+        web_latest = if !present_vec.is_empty() {
+            present_vec
+                .into_iter()
+                .max()
+                .unwrap()
+                .format("%F")
+                .to_string()
+        } else {
+            // Seven days missing all
+            // Rust update unavailable
+            println!("\nFor RLS, unfortunate 7 days");
+            println!("It is impossible to find the latest version");
+            println!("The following version is written in the built-in text");
+            String::new()
+        };
+    }
+
+    if disconn && text_latest.is_empty() {
+        println!(" >>> Not found latest.txt");
+        println!("\n ->Can't search Rust and RLS latest version\n");
+        exit(99);
     }
 
     // left==true: Installed rust-YYYY-MM-DD.
@@ -360,7 +387,9 @@ fn nightly(yes: bool) {
                     false,
                 );
                 // Text write newline
-                text_write(&web_latest);
+                if !text_latest.is_empty() {
+                    text_write(&web_latest);
+                }
             } else if chrono_web <= chrono_text {
                 print_rust_and_rls_install(
                     &text_latest,
@@ -385,7 +414,9 @@ fn nightly(yes: bool) {
                     chrono_now == chrono_web,
                 );
                 // Text write newline
-                text_write(&web_latest);
+                if !text_latest.is_empty() {
+                    text_write(&web_latest);
+                }
             } else if chrono_web <= chrono_text {
                 print_rust_and_rls_install(
                     &text_latest,
@@ -539,12 +570,12 @@ fn platform(no_head: &str) -> String {
     re_date_plus_hyphen.replace(no_head, "").to_string() // matching. <YYYY-MM-DD>
 }
 
-fn latest_text_lines() -> std::result::Result<Vec<String>, std::io::ErrorKind> {
+fn latest_text_lines() -> std::io::Result<Vec<String>> {
     use std::fs::read;
-    let text_vector = read(latest_txt_path(BUILD_IN_TEXT_NAME)).unwrap();
+    let text_vector = read(latest_txt_path(BUILD_IN_TEXT_NAME))?;
 
     match text_vector.len() {
-        0 => Err(std::io::ErrorKind::NotFound),
+        0 => Ok(vec![]),
         _ => {
             let text_str = String::from_utf8(text_vector).unwrap();
             let lines: Vec<_> = text_str
