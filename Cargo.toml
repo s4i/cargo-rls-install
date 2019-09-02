@@ -14,7 +14,6 @@ keywords = [
     "cargo",
     "subcommand",
     "rls",
-    "install",
     "language-server",
 ]
 
