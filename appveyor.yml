@@ -1,11 +1,15 @@
 ## Operating System (VM environment) ##
 
 # os: Visual Studio 2019
-build: false
 
 ## Build Matrix ##
 
 environment:
+  global:
+    PROJECT_NAME: cargo-rls-install
+    RUSTUP_USE_REQWEST: "1"
+    CARGO_HTTP_CHECK_REVOKE: "false"
+
   matrix:
     ### MSVC Toolchains ###
 
@@ -24,7 +28,7 @@ environment:
     # Nightly 64-bit MSVC
     - channel: nightly
       target: x86_64-pc-windows-msvc
-    #cargoflags: --features "unstable"
+      cargoflags: --features "unstable"
     # Nightly 32-bit MSVC
     # - channel: nightly
     #   target: i686-pc-windows-msvc
@@ -45,7 +49,7 @@ environment:
     # Nightly 64-bit GNU
     - channel: nightly
       target: x86_64-pc-windows-gnu
-    #cargoflags: --features "unstable"
+      cargoflags: --features "unstable"
     # Nightly 32-bit GNU
     # - channel: nightly
     #   target: i686-pc-windows-gnu
@@ -53,9 +57,9 @@ environment:
 
 ### Allowed failures ###
 
-matrix:
-  allow_failures:
-    - channel: nightly
+# matrix:
+#   allow_failures:
+#     - channel: nightly
 
 ## Install Script ##
 
@@ -63,17 +67,21 @@ install:
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
   - rustup-init -yv --default-toolchain %channel% --default-host %target%
   - set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+  - if "%TARGET%" == "i686-pc-windows-gnu" set PATH=%PATH%;C:\msys64\mingw32\bin
+  - if "%TARGET%" == "x86_64-pc-windows-gnu" set PATH=%PATH%;C:\msys64\mingw64\bin
   - rustc -vV
   - cargo -vV
+
+build: false
 
 ## Test Script ##
 
 test_script:
-  - cargo build --verbose %cargoflags% --all
+  - cargo build --verbose %cargoflags%
   - cargo test --verbose %cargoflags%
 
 ## Use cache ##
 
-cache:
-  - C:\Users\appveyor\.cargo
-  - C:\Users\appveyor\.rustup
+# cache:
+#   - C:\Users\appveyor\.cargo
+#   - C:\Users\appveyor\.rustup
