@@ -1,7 +1,7 @@
 ## Operating System (VM environment) ##
 
-os: Visual Studio 2015
-build: "off"
+# os: Visual Studio 2019
+build: false
 
 ## Build Matrix ##
 
@@ -31,8 +31,8 @@ environment:
     #cargoflags: --features "unstable"
     ### GNU Toolchains ###
     # Stable 64-bit GNU
-    # - channel: stable
-    #   target: x86_64-pc-windows-gnu
+    - channel: stable
+      target: x86_64-pc-windows-gnu
     # Stable 32-bit GNU
     # - channel: stable
     #   target: i686-pc-windows-gnu
@@ -43,8 +43,8 @@ environment:
     # - channel: beta
     #   target: i686-pc-windows-gnu
     # Nightly 64-bit GNU
-    # - channel: nightly
-    #   target: x86_64-pc-windows-gnu
+    - channel: nightly
+      target: x86_64-pc-windows-gnu
     #cargoflags: --features "unstable"
     # Nightly 32-bit GNU
     # - channel: nightly
@@ -53,9 +53,9 @@ environment:
 
 ### Allowed failures ###
 
-matrix:
-  allow_failures:
-    - channel: nightly
+# matrix:
+#   allow_failures:
+#     - channel: nightly
 
 ## Install Script ##
 
