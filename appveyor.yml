@@ -83,5 +83,5 @@ test_script:
 ## Use cache ##
 
 # cache:
-#   - C:\Users\appveyor\.cargo
+  - C:\Users\appveyor\.cargo
 #   - C:\Users\appveyor\.rustup
