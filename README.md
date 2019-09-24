@@ -43,7 +43,7 @@ sudo dnf install openssl
 ## Usage
 
 ```bash
-cargo rls-install [FLAGS]
+cargo rls-install [FLAGS] [OPTIONS]
 ```
 
 ### Example1
@@ -138,7 +138,7 @@ cargo rls-install -u s
 # Uninstall beta
 cargo rls-install -u b
 # Uninstall target beta
-cargo rls-install -u bbeta-2019-05-19
+cargo rls-install -u beta-2019-05-19
 # Uninstall nightly
 cargo rls-install -u n
 # Uninstall target nightly
