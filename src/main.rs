@@ -19,7 +19,7 @@ const BUILD_IN_TEXT_NAME: &str = "latest.txt";
 
 fn main() {
     // Command line
-    // lib.rs
+    // options.rs
     let o: Channel = parse_args();
 
     // Check if component name isn't empty
