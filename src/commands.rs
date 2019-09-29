@@ -2,7 +2,7 @@ use std::io::{stdin, stdout, Result, Write};
 use std::process::{exit, Command};
 use std::str::from_utf8;
 
-fn excecution(yes: bool) -> Result<()> {
+fn execution(yes: bool) -> Result<()> {
     if !yes {
         print!("Execution(y/n) ");
         stdout().flush().unwrap();
@@ -68,7 +68,7 @@ fn rust_install(channel: &str, yes: bool) {
         println!("$ rustup install {}\n", channel);
     }
 
-    match excecution(yes) {
+    match execution(yes) {
         Ok(()) => command_rust(&channel),
         Err(e) => {
             println!("{:?}", e);
@@ -84,7 +84,7 @@ fn rls_install(channel: &str, yes: bool) {
         println!("\n$ rustup component add rls --toolchain {}\n", channel);
     }
 
-    match excecution(yes) {
+    match execution(yes) {
         Ok(()) => component_add(&channel, "rls"), // rls install
         Err(e) => {
             println!("{:?}", e);
@@ -99,7 +99,7 @@ fn rls_install(channel: &str, yes: bool) {
         );
     }
 
-    match excecution(yes) {
+    match execution(yes) {
         Ok(()) => component_add(&channel, "rust-analysis"), // rust-analysis install
         Err(e) => {
             println!("{:?}", e);
@@ -114,7 +114,7 @@ fn rls_install(channel: &str, yes: bool) {
         );
     }
 
-    match excecution(yes) {
+    match execution(yes) {
         Ok(()) => component_add(&channel, "rust-src"), // rust-src install
         Err(e) => {
             println!("{:?}", e);
@@ -130,7 +130,7 @@ fn rust_set_default(channel: &str, yes: bool) {
         println!("$ rustup default {}\n", channel);
     }
 
-    match excecution(yes) {
+    match execution(yes) {
         Ok(()) => command_rust_default(&channel),
         Err(e) => {
             println!("{:?}", e);
@@ -184,7 +184,7 @@ pub fn command_rust_default(channel: &str) {
 
 pub fn command_rust_uninstall(channel: &str) {
     println!("\n$ rustup uninstall {}", channel);
-    match excecution(false) {
+    match execution(false) {
         Ok(()) => {
             Command::new("rustup")
                 .args(&["uninstall", channel])
@@ -209,7 +209,7 @@ pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
     for dt in &dated_nightly {
         println!("$ rustup uninstall {}", dt);
     }
-    match excecution(false) {
+    match execution(false) {
         Ok(()) => {
             for dt in &dated_nightly {
                 Command::new("rustup")
