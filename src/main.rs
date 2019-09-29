@@ -27,18 +27,10 @@ fn main() {
     let rustup_default = o.default.is_some();
     let rustup_uninstall = o.uninstall.is_some();
 
-    let mut has_stable = false;
-    let mut has_beta = false;
-
     let re_channel = Regex::new(r"(default)").unwrap();
     let mut default_channel_name = String::new();
 
     for lt in installed_toolchains() {
-        if lt.starts_with("stable-") {
-            has_stable = true;
-        } else if lt.starts_with("beta-") {
-            has_beta = true;
-        }
         if re_channel.is_match(&lt) {
             default_channel_name = lt.replace(" (default)", "");
         }
@@ -68,7 +60,7 @@ fn main() {
         print_rust_and_rls_install(
             "stable",
             o.yes,
-            has_stable,
+            false,
             default_channel_name.starts_with("stable-"),
         );
     }
@@ -78,7 +70,7 @@ fn main() {
         print_rust_and_rls_install(
             "beta",
             o.yes,
-            has_beta,
+            false,
             default_channel_name.starts_with("beta-"),
         );
     }
@@ -148,7 +140,7 @@ fn main() {
                     print_rust_and_rls_install(
                         "stable",
                         o.yes,
-                        has_stable,
+                        false,
                         default_channel_name.starts_with("stable-"),
                     );
                 }
@@ -156,7 +148,7 @@ fn main() {
                     print_rust_and_rls_install(
                         "beta",
                         o.yes,
-                        has_beta,
+                        false,
                         default_channel_name.starts_with("beta-"),
                     );
                 }
