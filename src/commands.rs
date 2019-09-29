@@ -43,17 +43,17 @@ pub fn print_rust_and_rls_install(
         format!("{}{}", "nightly-", ch)
     };
 
-    // Operation 1
+    // Operation 1: Rust install
     if skip_rust_install {
         println!("\n   1. Rust version: OK({} installed)", channel);
     } else {
         rust_install(&channel, yes);
     }
 
-    // Operation 2
+    // Operation 2: RLS install
     rls_install(&channel, yes);
 
-    // Operation 3
+    // Operation 3: Default setting
     if skip_default_setting {
         println!("\n   3. Set default: Already set\n");
     } else {
