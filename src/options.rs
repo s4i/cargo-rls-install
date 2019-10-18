@@ -2,11 +2,7 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 enum Cargo {
-    #[structopt(
-        name = "rls-install",
-        about = "Install the Rust and Rust Language Server",
-        author = " "
-    )]
+    #[structopt(name = "rls-install")]
     Install(Channel),
 }
 
