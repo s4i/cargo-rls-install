@@ -52,7 +52,7 @@ fn main() {
             _ => println!("Invalid option"),
         }
         println!("End");
-        exit(0);
+        return;
     }
 
     // Stable choice
