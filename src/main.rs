@@ -3,19 +3,14 @@ use cargo_rls_install::{
         command_rust_default, command_rust_multiple_uninstall, command_rust_uninstall,
         component_add, component_add_and_get_output, print_rust_and_rls_install, select_channel,
     },
-    global::PRESENT_DATE,
-    local_env::latest_txt_path,
     options::{help, parse_args, Channel},
     scraping::RustupCompenentsHistory,
 };
 
 use chrono::NaiveDate;
 use regex::Regex;
-use std::io::{BufWriter, Write};
-use std::process::{exit, Command};
-use std::{fs, str};
-
-const BUILD_IN_TEXT_NAME: &str = "latest.txt";
+use std::process::Command;
+use std::str;
 
 fn main() {
     // Command line
@@ -172,15 +167,6 @@ fn view(default_toolchain: &str) {
     /* Local system rust version */
     let (_, platform_name) = sysroot_regex();
 
-    /* Search url decision and Scraping */
-    match url_decision(&platform_name)
-        .as_str()
-        .rustup_components_history()
-    {
-        Ok(()) => (),
-        Err(_) => println!(" >>> May not be connected to the network\n"),
-    }
-
     // local info
     let mut local_nightlys = vec![];
 
@@ -197,9 +183,20 @@ fn view(default_toolchain: &str) {
     println!(" * Rust information");
 
     // web status
-    let map = PRESENT_DATE.lock().unwrap();
+    /* Search url decision and Scraping */
+    let web_status = match url_decision(&platform_name)
+        .as_str()
+        .rustup_components_history()
+    {
+        Ok(map) => map,
+        Err(_) => {
+            println!(" >>> May not be connected to the network\n");
+            return;
+        }
+    };
+
     let mut seven_days = Vec::new();
-    for (date, _) in map.iter() {
+    for date in web_status[0].keys() {
         seven_days.push(date);
     }
 
@@ -211,240 +208,160 @@ fn view(default_toolchain: &str) {
         }
     }
 
-    println!(" --------------------------------");
+    println!(" --------------------------------------------");
 
     if has_seven_days_before {
-        println!(" |    Old Rust(Before 8 days)   |");
-        println!(" --------------------------------");
-        println!(" | {:<19} {:^9}|", "Build date", "");
-        println!(" --------------------------------");
+        println!(" | {:^40} |", "Old Rust(Before 8 days)");
+        println!(" --------------------------------------------");
+        println!(" | {:<40} |", "Build date");
+        println!(" --------------------------------------------");
 
         for tc in &local_nightlys {
             if !seven_days.contains(&tc) {
-                let build_date = format!("{}{}", "nightly-", tc);
-                if default_toolchain.starts_with(&build_date) {
-                    println!(" | {:<19} {:^9}| <= Installed(Default)", build_date, "");
+                if default_toolchain.starts_with(&format!("{}{}", "nightly-", tc)) {
+                    println!(
+                        " | {:<40} | <= Installed(Default)",
+                        format!("{}{}", "nightly-", tc)
+                    );
                 } else {
                     println!(
-                        " | {:<19} {:^9}| <= Installed",
-                        format!("{}{}", "nightly-", tc),
-                        ""
+                        " | {:<40} | <= Installed",
+                        format!("{}{}", "nightly-", tc)
                     );
                 }
             }
         }
-        println!(" --------------------------------");
+        println!(" --------------------------------------------");
     }
 
-    println!(" |  One week Rust & RLS status  |");
-    println!(" --------------------------------");
-    println!(" | {:<19}|{:^9}|", "Build date", "Status");
-    println!(" --------------------------------");
+    println!(" | {:<40} |", "One week Rust & RLS status");
+    println!(" --------------------------------------------");
+    println!(" | {:<19}| {:^9}| {:^9}|", "Build date", "Clippy", "RLS");
+    println!(" --------------------------------------------");
 
-    for (date, status) in map.iter() {
+    for date in seven_days.iter() {
         if local_nightlys.contains(&date) {
             let build_date = format!("{}{}", "nightly-", date);
             if default_toolchain.starts_with(&build_date) {
-                println!(" | {:<19}|{:^9}| <= Installed(Default)", build_date, status);
+                println!(
+                    " | {:<19}| {:^9}| {:^9}| <= Installed(Default)",
+                    build_date,
+                    web_status[0].get(date.to_owned()).unwrap(),
+                    web_status[1].get(date.to_owned()).unwrap(),
+                );
             } else {
                 println!(
-                    " | {:<19}|{:^9}| <= Installed",
+                    " | {:<19}| {:^9}| {:^9}| <= Installed",
                     format!("{}{}", "nightly-", date),
-                    status
+                    web_status[0].get(date.to_owned()).unwrap(),
+                    web_status[1].get(date.to_owned()).unwrap(),
                 );
             }
         } else if date.starts_with("Last") {
-            println!(" --------------------------------");
+            println!(" --------------------------------------------");
+            println!(" | {:^40} |", date);
             println!(
-                " |{:^30}|",
-                format!("{}{}{}", date, ": ".to_owned(), status)
+                " | {:^40} |",
+                format!(
+                    "Clippy:{} RLS:{}",
+                    web_status[0].get(date.to_owned()).unwrap(),
+                    web_status[1].get(date.to_owned()).unwrap(),
+                )
             );
         } else {
             println!(
-                " | {:<19}|{:^9}|",
+                " | {:<19}| {:^9}| {:^9}|",
                 format!("{}{}", "nightly-", date),
-                status
+                web_status[0].get(date.to_owned()).unwrap(),
+                web_status[1].get(date.to_owned()).unwrap(),
             );
         }
     }
-    println!(" --------------------------------");
+    println!(" --------------------------------------------");
 }
 
 fn nightly(yes: bool) {
     /* Local system rust version */
-    let (now_build_date, platform_name) = sysroot_regex();
+    let (_, platform_name) = sysroot_regex();
 
-    // Get web page date(nightly-"Date" store) - global variable
-    let mut disconn = false;
-
-    match url_decision(&platform_name)
+    let web_status = match url_decision(&platform_name)
         .as_str()
         .rustup_components_history()
     {
-        Ok(()) => (),
+        Ok(map) => map,
         Err(_) => {
-            disconn = true;
             println!(" >>> May not be connected to the network");
+            return;
+        }
+    };
+
+    // Seven days missing all
+    // Rust update unavailable
+    if web_status[0].contains_key("seven days") {
+        println!("\nFor CLIPPY, unfortunate 7 days");
+        println!("It is impossible to find the latest version");
+        return;
+    } else if web_status[1].contains_key("seven days") {
+        println!("\nFor RLS, unfortunate 7 days");
+        println!("It is impossible to find the latest version");
+        return;
+    }
+
+    let mut clippy_present_last = NaiveDate::from_ymd(2018, 12, 31);
+    let mut rls_present_last = NaiveDate::from_ymd(2018, 12, 31);
+
+    // Table
+    println!(" {:<22}{:<8} {:<8}", "Build date", "Clippy", "RLS");
+    println!(" --------------------------------------------");
+
+    for date in web_status[0].keys() {
+        let clippy = web_status[0].get(&date.to_owned()).unwrap();
+        let rls = web_status[1].get(&date.to_owned()).unwrap();
+        if !date.starts_with("Last") {
+            println!(
+                " {:<20} {:>8} {:>8}",
+                format!("{}{}", "nightly-", date),
+                clippy,
+                rls
+            );
+        }
+
+        if clippy == "present" {
+            clippy_present_last =
+                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type")
+        }
+
+        if rls == "present" {
+            rls_present_last =
+                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type")
         }
     }
 
-    // Get web page date
-    let mut web_latest = String::new();
+    println!(" --------------------------------------------");
 
-    // Get text date(nightly-"Date" store)
-    let mut latest_txt_lines = Vec::new();
-
-    if let Ok(text_date) = latest_text_lines() {
-        latest_txt_lines = text_date
+    // Rust and RLS aren't installed on the local system.
+    let chrono_now_vec = match installed_nightly() {
+        Ok(vec) => vec,
+        Err(_e) => vec![String::new()],
     };
 
-    // line tail(=latest date) get
-    let text_latest = if !latest_txt_lines.is_empty() {
-        latest_txt_lines.last().unwrap().to_string()
-    } else {
-        "".to_string()
-    };
-
-    // get last line(latest)
-    let chrono_text = if !text_latest.is_empty() {
-        NaiveDate::parse_from_str(&text_latest, "%Y-%m-%d").expect("Parse error: NaiveData type")
-    } else {
-        NaiveDate::from_ymd(2018, 12, 31)
-    };
-
-    if !disconn {
-        let mut present_vec = Vec::new();
-
-        // global variable
-        let map = PRESENT_DATE.lock().unwrap();
-
-        // Display
-        println!(" {:<20} Status", "Build date");
-        println!(" -----------------------------");
-        for (date, status) in map.iter() {
-            if !date.starts_with("Last") {
-                println!(" {:<20}{:>8}", format!("{}{}", "nightly-", date), status);
-            }
-            if status == "present" {
-                present_vec.push(
-                    NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                        .expect("Parse error: NaiveData type"),
-                );
-            }
-        }
-        println!(" -----------------------------");
-
-        web_latest = if !present_vec.is_empty() {
-            present_vec
-                .into_iter()
-                .max()
-                .unwrap()
-                .format("%F")
-                .to_string()
-        } else {
-            // Seven days missing all
-            // Rust update unavailable
-            println!("\nFor RLS, unfortunate 7 days");
-            println!("It is impossible to find the latest version");
-            println!("The following version is written in the built-in text");
-            String::new()
-        };
-    }
-
-    if disconn && text_latest.is_empty() {
-        println!(" >>> Not found latest.txt");
-        println!("\n ->Can't search Rust and RLS latest version\n");
-        exit(99);
-    }
-
-    // left==true: Installed rust-YYYY-MM-DD.
-    // right==true: Scraping sucessed.
-    // chrono_text and text_latest: Absolutely obtainable.
-    match (!now_build_date.is_empty(), !web_latest.is_empty()) {
-        (false, true) => {
-            // Rust and RLS aren't installed on the local system.
-            // Case: first use or not default channel nightly.
-            let chrono_now_vec = match installed_nightly() {
-                Ok(vec) => vec,
-                Err(_e) => vec![NaiveDate::from_ymd(2018, 12, 31)],
-            };
-
-            let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
-
-            if chrono_web > chrono_text {
-                print_rust_and_rls_install(
-                    &web_latest,
-                    yes,
-                    chrono_now_vec.contains(&chrono_web),
-                    false,
-                );
-                // Text write newline
-                if !text_latest.is_empty() {
-                    text_write(&web_latest);
-                }
-            } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(
-                    &text_latest,
-                    yes,
-                    chrono_now_vec.contains(&chrono_text),
-                    false,
-                );
-            }
-        }
-        (true, true) => {
-            // Case: Already nightly-YYYY-MM-DD & rls installed.
-            // if chrono_now > chrono_web && chrono_now > chrono_text {
-            //     println!("Can't search Rust and RLS latest version");
-            let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
-            let chrono_web = NaiveDate::parse_from_str(&web_latest, "%Y-%m-%d").unwrap();
-
-            if chrono_web > chrono_text {
-                print_rust_and_rls_install(
-                    &web_latest,
-                    yes,
-                    chrono_now >= chrono_web,
-                    chrono_now == chrono_web,
-                );
-                // Text write newline
-                if !text_latest.is_empty() {
-                    text_write(&web_latest);
-                }
-            } else if chrono_web <= chrono_text {
-                print_rust_and_rls_install(
-                    &text_latest,
-                    yes,
-                    chrono_now >= chrono_text,
-                    chrono_now == chrono_text,
-                );
-            }
-        }
-        (true, false) => {
-            // Case: clippy won't be useful for 8 days.
-            let chrono_now = NaiveDate::parse_from_str(&now_build_date, "%Y-%m-%d").unwrap();
-            if chrono_now < chrono_text {
-                print_rust_and_rls_install(&text_latest, yes, false, false);
-            } else {
-                print_rust_and_rls_install(
-                    &now_build_date,
-                    yes,
-                    chrono_now >= chrono_text,
-                    chrono_now == chrono_text,
-                );
-            }
-        }
-        (false, false) => {
-            // Case: Clippy won't be useful for 8 days, when this tool first use.
-            let chrono_now_vec = match installed_nightly() {
-                Ok(vec) => vec,
-                Err(_e) => vec![NaiveDate::from_ymd(2018, 12, 31)],
-            };
-
+    if clippy_present_last != NaiveDate::from_ymd(2018, 12, 31)
+        && rls_present_last != NaiveDate::from_ymd(2018, 12, 31)
+    {
+        if clippy_present_last >= rls_present_last {
             print_rust_and_rls_install(
-                &text_latest,
+                &rls_present_last.format("%F").to_string(),
                 yes,
-                chrono_now_vec.contains(&chrono_text),
+                chrono_now_vec.contains(&rls_present_last.format("%F").to_string()),
                 false,
-            )
+            );
+        } else if clippy_present_last < rls_present_last {
+            print_rust_and_rls_install(
+                &clippy_present_last.format("%F").to_string(),
+                yes,
+                chrono_now_vec.contains(&clippy_present_last.format("%F").to_string()),
+                false,
+            );
         }
     }
 }
@@ -461,7 +378,7 @@ fn url_decision(platform_name: &str) -> String {
     }
 }
 
-fn installed_nightly() -> Result<Vec<NaiveDate>, String> {
+fn installed_nightly() -> Result<Vec<String>, String> {
     let re_default_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}-").unwrap();
     let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
@@ -469,8 +386,7 @@ fn installed_nightly() -> Result<Vec<NaiveDate>, String> {
 
     for lt in installed_toolchains() {
         if re_default_nightly.is_match(&lt) {
-            let now_build_date = re_date.find(&lt).unwrap().as_str();
-            chrono_now_vec.push(NaiveDate::parse_from_str(now_build_date, "%Y-%m-%d").unwrap());
+            chrono_now_vec.push(re_date.find(&lt).unwrap().as_str().to_owned());
         }
     }
 
@@ -479,16 +395,6 @@ fn installed_nightly() -> Result<Vec<NaiveDate>, String> {
     } else {
         Err("Not installed".to_owned())
     }
-}
-
-fn text_write(nightly_date: &str) {
-    let writer_opt = fs::OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(latest_txt_path(BUILD_IN_TEXT_NAME))
-        .expect("Can't open file");
-    let mut writer = BufWriter::new(writer_opt);
-    writeln!(writer, "{}", nightly_date).expect("File write failed");
 }
 
 fn local_system_rust_version() -> String {
@@ -526,18 +432,21 @@ fn sysroot_regex() -> (String, String) {
 
             let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
-            let now_build_date = if re_date.is_match(&no_head) {
+            let now_default_build_date = if re_date.is_match(&no_head) {
                 re_date.find(&no_head).unwrap().as_str().to_owned()
             } else {
                 String::new()
             };
 
-            if now_build_date.is_empty() {
+            if now_default_build_date.is_empty() {
                 println!("\n * Default use toolchain: nightly\n");
             } else {
-                println!("\n * Default use toolchain: nightly-{}\n", now_build_date);
+                println!(
+                    "\n * Default use toolchain: nightly-{}\n",
+                    now_default_build_date
+                );
             }
-            (now_build_date, platform(&no_head))
+            (now_default_build_date, platform(&no_head))
         }
         (false, true, false) => {
             println!("\n * Default use toolchain: beta\n");
@@ -560,24 +469,6 @@ fn sysroot_regex() -> (String, String) {
 fn platform(no_head: &str) -> String {
     let re_date_plus_hyphen = Regex::new(r"\d{4}-\d{2}-\d{2}-").unwrap();
     re_date_plus_hyphen.replace(no_head, "").to_string() // matching. <YYYY-MM-DD>
-}
-
-fn latest_text_lines() -> std::io::Result<Vec<String>> {
-    use std::fs::read;
-    let text_vector = read(latest_txt_path(BUILD_IN_TEXT_NAME))?;
-
-    match text_vector.len() {
-        0 => Ok(vec![]),
-        _ => {
-            let text_str = String::from_utf8(text_vector).unwrap();
-            let lines: Vec<_> = text_str
-                .trim_end()
-                .split('\n')
-                .map(|s| s.trim().to_owned())
-                .collect();
-            Ok(lines)
-        }
-    }
 }
 
 pub fn installed_toolchains() -> Vec<String> {
