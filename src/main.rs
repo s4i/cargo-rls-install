@@ -224,10 +224,7 @@ fn view(default_toolchain: &str) {
                         format!("{}{}", "nightly-", tc)
                     );
                 } else {
-                    println!(
-                        " | {:<40} | <= Installed",
-                        format!("{}{}", "nightly-", tc)
-                    );
+                    println!(" | {:<40} | <= Installed", format!("{}{}", "nightly-", tc));
                 }
             }
         }
