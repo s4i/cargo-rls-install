@@ -1,5 +1,6 @@
 use select::document::Document;
 use select::predicate::{Attr, Name};
+use std::io::Read;
 
 // #[test]
 // fn scraping_html_text() {
@@ -63,48 +64,54 @@ use select::predicate::{Attr, Name};
 // }
 
 #[test]
-fn scraping_method_get() {
+fn scraping_method_get() -> std::io::Result<()> {
     let url = "https://rust-lang.github.io/rustup-components-history/";
-    let resp = reqwest::get(url).expect("Can't get response.");
-    let document = Document::from_read(resp).expect("Data read failed.");
+    let resp = ureq::get(url).call();
+    let mut buf = vec![];
+    if resp.ok() {
+        resp.into_reader().read_to_end(&mut buf)?;
+        let document = Document::from(String::from_utf8(buf).unwrap().as_str());
+        let date = document
+            .find(Attr("scope", "col"))
+            .skip(1)
+            .map(|tag| tag.text())
+            .collect::<Vec<_>>();
 
-    let date = document
-        .find(Attr("scope", "col"))
-        .skip(1)
-        .map(|tag| tag.text())
-        .collect::<Vec<_>>();
+        println!("{:?}", date);
+        // println!("{:?}", date);
+        // let pkg_name = document.find(Attr("scope", "row"))
+        //     .map(|tag| tag.text()).collect::<Vec<_>>();
+        // println!("{:?}", pkg_name);
+        // let build_status = document.find(Name("td"))
+        //     .map(|tag| tag.text()).collect::<Vec<_>>();
+        // println!("{:?}", build_status);
 
-    println!("{:?}", date);
-    // println!("{:?}", date);
-    // let pkg_name = document.find(Attr("scope", "row"))
-    //     .map(|tag| tag.text()).collect::<Vec<_>>();
-    // println!("{:?}", pkg_name);
-    // let build_status = document.find(Name("td"))
-    //     .map(|tag| tag.text()).collect::<Vec<_>>();
-    // println!("{:?}", build_status);
+        let build_status = document
+            .find(Attr("scope", "row"))
+            // .filter(|x| x.text() == "rls")
+            // .next()
+            .find(|x| x.text() == "rls")
+            // .map(|tag| tag.text())
+            // .collect::<Vec<_>>(); // result -> "rls"
+            .expect("iter to string failed or not found web page.")
+            .parent()
+            .unwrap()
+            .find(Name("td"))
+            .map(|tag| tag.text())
+            .collect::<Vec<_>>();
 
-    let build_status = document
-        .find(Attr("scope", "row"))
-        // .filter(|x| x.text() == "rls")
-        // .next()
-        .find(|x| x.text() == "rls")
-        // .map(|tag| tag.text())
-        // .collect::<Vec<_>>(); // result -> "rls"
-        .expect("iter to string failed or not found web page.")
-        .parent()
-        .unwrap()
-        .find(Name("td"))
-        .map(|tag| tag.text())
-        .collect::<Vec<_>>();
+        // println!("{:?}", build_status);
 
-    // println!("{:?}", build_status);
-
-    if !build_status.iter().all(|x| x == "missing") {
-        for (i, s) in build_status.iter().enumerate() {
-            if s == "present" {
-                let mut vec = vec![];
-                vec.push(date[i].clone());
+        if !build_status.iter().all(|x| x == "missing") {
+            for (i, s) in build_status.iter().enumerate() {
+                if s == "present" {
+                    let mut vec = vec![];
+                    vec.push(date[i].clone());
+                }
             }
         }
+    } else {
+        println!("Status error: {:?}", resp.status_line());
     }
+    Ok(())
 }

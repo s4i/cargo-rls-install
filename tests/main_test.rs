@@ -1,4 +1,3 @@
-extern crate cargo_rls_install;
 use regex::Regex;
 use std::fs;
 use std::io::{BufRead, BufReader};

@@ -260,7 +260,7 @@ fn view(default_toolchain: &str) {
             println!(
                 " | {:^40} |",
                 format!(
-                    "Clippy:{} RLS:{}",
+                    "Clippy:{}, RLS:{}",
                     web_status[0].get(date.to_owned()).unwrap(),
                     web_status[1].get(date.to_owned()).unwrap(),
                 )
