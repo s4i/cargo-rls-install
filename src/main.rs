@@ -325,8 +325,6 @@ fn nightly(yes: bool) {
     if !clippy_present_last.is_empty() && !rls_present_last.is_empty() {
         let clippy_repl: i32 = clippy_present_last.replace("-", "").parse().unwrap();
         let rls_repl: i32 = rls_present_last.replace("-", "").parse().unwrap();
-        println!("{}", clippy_repl);
-        println!("{}", rls_repl);
         if clippy_repl >= rls_repl {
             print_rust_and_rls_install(
                 &rls_present_last,
