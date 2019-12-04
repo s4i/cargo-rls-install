@@ -2,6 +2,7 @@
 
 | Date       | Version | Change                                                                                                                                 |
 | ---------- | ------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| 2019/12/04 | v2.0.2  | Always find the date.                                                                                                                  |
 | 2019/11/23 | v2.0.1  | use reqwest -> ureq                                                                                                                    |
 | 2019/11/09 | v2.0.0  | Fixed: Nightly rust now requires clippy, so check clippy build status.<br>Change: Removed latest.txt.<br>Other: Removed some examples. |
 | 2019/09/30 | v1.0.30 | Fix bug. Can't update stable and beta.                                                                                                 |

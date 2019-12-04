@@ -7,7 +7,6 @@ use cargo_rls_install::{
     scraping::RustupCompenentsHistory,
 };
 
-use chrono::NaiveDate;
 use regex::Regex;
 use std::process::Command;
 use std::str;
@@ -292,20 +291,8 @@ fn nightly(yes: bool) {
         }
     };
 
-    // Seven days missing all
-    // Rust update unavailable
-    if web_status[0].contains_key("seven days") {
-        println!("\nFor CLIPPY, unfortunate 7 days");
-        println!("It is impossible to find the latest version");
-        return;
-    } else if web_status[1].contains_key("seven days") {
-        println!("\nFor RLS, unfortunate 7 days");
-        println!("It is impossible to find the latest version");
-        return;
-    }
-
-    let mut clippy_present_last = NaiveDate::from_ymd(2018, 12, 31);
-    let mut rls_present_last = NaiveDate::from_ymd(2018, 12, 31);
+    let mut clippy_present_last = String::new();
+    let mut rls_present_last = String::new();
 
     // Table
     println!(" {:<22}{:<8} {:<8}", "Build date", "Clippy", "RLS");
@@ -314,7 +301,10 @@ fn nightly(yes: bool) {
     for date in web_status[0].keys() {
         let clippy = web_status[0].get(&date.to_owned()).unwrap();
         let rls = web_status[1].get(&date.to_owned()).unwrap();
-        if !date.starts_with("Last") {
+        if date.starts_with("Last") {
+            clippy_present_last = web_status[0].get(date).unwrap().to_owned();
+            rls_present_last = web_status[1].get(date).unwrap().to_owned();
+        } else {
             println!(
                 " {:<20} {:>8} {:>8}",
                 format!("{}{}", "nightly-", date),
@@ -322,41 +312,33 @@ fn nightly(yes: bool) {
                 rls
             );
         }
-
-        if clippy == "present" {
-            clippy_present_last =
-                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type")
-        }
-
-        if rls == "present" {
-            rls_present_last =
-                NaiveDate::parse_from_str(date, "%Y-%m-%d").expect("Parse error: NaiveData type")
-        }
     }
 
     println!(" --------------------------------------------");
 
     // Rust and RLS aren't installed on the local system.
-    let chrono_now_vec = match installed_nightly() {
+    let now_vec = match installed_nightly() {
         Ok(vec) => vec,
         Err(_e) => vec![String::new()],
     };
 
-    if clippy_present_last != NaiveDate::from_ymd(2018, 12, 31)
-        && rls_present_last != NaiveDate::from_ymd(2018, 12, 31)
-    {
-        if clippy_present_last >= rls_present_last {
+    if !clippy_present_last.is_empty() && !rls_present_last.is_empty() {
+        let clippy_repl: i32 = clippy_present_last.replace("-", "").parse().unwrap();
+        let rls_repl: i32 = rls_present_last.replace("-", "").parse().unwrap();
+        println!("{}", clippy_repl);
+        println!("{}", rls_repl);
+        if clippy_repl >= rls_repl {
             print_rust_and_rls_install(
-                &rls_present_last.format("%F").to_string(),
+                &rls_present_last,
                 yes,
-                chrono_now_vec.contains(&rls_present_last.format("%F").to_string()),
+                now_vec.contains(&rls_present_last),
                 false,
             );
-        } else if clippy_present_last < rls_present_last {
+        } else if clippy_repl < rls_repl {
             print_rust_and_rls_install(
-                &clippy_present_last.format("%F").to_string(),
+                &clippy_present_last,
                 yes,
-                chrono_now_vec.contains(&clippy_present_last.format("%F").to_string()),
+                now_vec.contains(&clippy_present_last),
                 false,
             );
         }
@@ -379,16 +361,16 @@ fn installed_nightly() -> Result<Vec<String>, String> {
     let re_default_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}-").unwrap();
     let re_date = Regex::new(r"\d{4}-\d{2}-\d{2}").unwrap();
 
-    let mut chrono_now_vec = Vec::new();
+    let mut now_vec = Vec::new();
 
     for lt in installed_toolchains() {
         if re_default_nightly.is_match(&lt) {
-            chrono_now_vec.push(re_date.find(&lt).unwrap().as_str().to_owned());
+            now_vec.push(re_date.find(&lt).unwrap().as_str().to_owned());
         }
     }
 
-    if !chrono_now_vec.is_empty() {
-        Ok(chrono_now_vec)
+    if !now_vec.is_empty() {
+        Ok(now_vec)
     } else {
         Err("Not installed".to_owned())
     }
