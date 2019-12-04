@@ -296,7 +296,7 @@ fn nightly(yes: bool) {
 
     // Table
     println!(" {:<22}{:<8} {:<8}", "Build date", "Clippy", "RLS");
-    println!(" --------------------------------------------");
+    println!(" --------------------------------------------------");
 
     for date in web_status[0].keys() {
         let clippy = web_status[0].get(&date.to_owned()).unwrap();
@@ -304,6 +304,15 @@ fn nightly(yes: bool) {
         if date.starts_with("Last") {
             clippy_present_last = web_status[0].get(date).unwrap().to_owned();
             rls_present_last = web_status[1].get(date).unwrap().to_owned();
+            println!(" --------------------------------------------------");
+            println!(
+                " {:<50} ",
+                format!(
+                    "Last available. Clippy:{}, RLS:{}",
+                    web_status[0].get(date).unwrap(),
+                    web_status[1].get(date).unwrap(),
+                )
+            );
         } else {
             println!(
                 " {:<20} {:>8} {:>8}",
@@ -314,7 +323,7 @@ fn nightly(yes: bool) {
         }
     }
 
-    println!(" --------------------------------------------");
+    println!(" --------------------------------------------------");
 
     // Rust and RLS aren't installed on the local system.
     let now_vec = match installed_nightly() {
