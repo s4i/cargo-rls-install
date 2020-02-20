@@ -299,8 +299,8 @@ fn nightly(yes: bool) {
     println!(" --------------------------------------------------");
 
     for date in web_status[0].keys() {
-        let clippy = web_status[0].get(&date.to_owned()).unwrap();
-        let rls = web_status[1].get(&date.to_owned()).unwrap();
+        let clippy = web_status[0].get(date).unwrap();
+        let rls = web_status[1].get(date).unwrap();
         if date.starts_with("Last") {
             clippy_present_last = web_status[0].get(date).unwrap().to_owned();
             rls_present_last = web_status[1].get(date).unwrap().to_owned();
@@ -308,9 +308,8 @@ fn nightly(yes: bool) {
             println!(
                 " {:<50} ",
                 format!(
-                    "Last available. Clippy:{}, RLS:{}",
-                    web_status[0].get(date).unwrap(),
-                    web_status[1].get(date).unwrap(),
+                    "Last available! Clippy:{}, RLS:{}",
+                    clippy_present_last, rls_present_last
                 )
             );
         } else {
@@ -332,22 +331,44 @@ fn nightly(yes: bool) {
     };
 
     if !clippy_present_last.is_empty() && !rls_present_last.is_empty() {
-        let clippy_repl: i32 = clippy_present_last.replace("-", "").parse().unwrap();
-        let rls_repl: i32 = rls_present_last.replace("-", "").parse().unwrap();
-        if clippy_repl >= rls_repl {
-            print_rust_and_rls_install(
-                &rls_present_last,
-                yes,
-                now_vec.contains(&rls_present_last),
-                false,
-            );
-        } else if clippy_repl < rls_repl {
-            print_rust_and_rls_install(
-                &clippy_present_last,
-                yes,
-                now_vec.contains(&clippy_present_last),
-                false,
-            );
+        let clippy_date: i32 = clippy_present_last.replace("-", "").parse().unwrap();
+        let rls_date: i32 = rls_present_last.replace("-", "").parse().unwrap();
+        if clippy_date >= rls_date {
+            if web_status[0].get(&rls_present_last.to_owned()).unwrap() == "present" {
+                print_rust_and_rls_install(
+                    &rls_present_last,
+                    yes,
+                    now_vec.contains(&rls_present_last),
+                    false,
+                );
+            } else {
+                for date in web_status[0].keys().rev() {
+                    let clippy = web_status[0].get(date).unwrap();
+                    let rls = web_status[1].get(date).unwrap();
+                    if clippy == "present" && rls == "present" {
+                        print_rust_and_rls_install(&date, yes, now_vec.contains(&date), false);
+                        break;
+                    }
+                }
+            }
+        } else if clippy_date < rls_date {
+            if web_status[1].get(&clippy_present_last.to_owned()).unwrap() == "present" {
+                print_rust_and_rls_install(
+                    &clippy_present_last,
+                    yes,
+                    now_vec.contains(&clippy_present_last),
+                    false,
+                );
+            } else {
+                for date in web_status[0].keys().rev() {
+                    let clippy = web_status[0].get(date).unwrap();
+                    let rls = web_status[1].get(date).unwrap();
+                    if clippy == "present" && rls == "present" {
+                        print_rust_and_rls_install(&date, yes, now_vec.contains(&date), false);
+                        break;
+                    }
+                }
+            }
         }
     }
 }
