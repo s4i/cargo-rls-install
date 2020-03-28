@@ -156,7 +156,7 @@ cargo rls-install -u a # a or all
 Uninstall toolchain. Use `rustup uninstall` command.  
 Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.
 
-### Example9(v2.0.4-)
+### Example10(v2.0.4-)
 
 Nightly Rust will be installed on the date you choose.
 
