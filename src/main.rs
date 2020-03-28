@@ -334,26 +334,27 @@ fn nightly(yes: bool) {
         let clippy_date: i32 = clippy_present_last.replace("-", "").parse().unwrap();
         let rls_date: i32 = rls_present_last.replace("-", "").parse().unwrap();
         if clippy_date >= rls_date {
-            if web_status[0]
-                .get(&rls_present_last.to_owned())
-                .expect("RLS or Clippy failed to build for 7 days")
-                == "present"
-            {
-                print_rust_and_rls_install(
-                    &rls_present_last,
-                    yes,
-                    now_vec.contains(&rls_present_last),
-                    false,
-                );
-            } else {
-                for date in web_status[0].keys().rev() {
-                    let clippy = web_status[0].get(date).unwrap();
-                    let rls = web_status[1].get(date).unwrap();
-                    if clippy == "present" && rls == "present" {
-                        print_rust_and_rls_install(&date, yes, now_vec.contains(&date), false);
-                        break;
+            if web_status[0].get(&rls_present_last.to_owned()).is_some() {
+                if web_status[0].get(&rls_present_last.to_owned()).unwrap() == "present" {
+                    print_rust_and_rls_install(
+                        &rls_present_last,
+                        yes,
+                        now_vec.contains(&rls_present_last),
+                        false,
+                    );
+                } else {
+                    for date in web_status[0].keys().rev() {
+                        let clippy = web_status[0].get(date).unwrap();
+                        let rls = web_status[1].get(date).unwrap();
+                        if clippy == "present" && rls == "present" {
+                            print_rust_and_rls_install(&date, yes, now_vec.contains(&date), false);
+                            break;
+                        }
                     }
                 }
+            } else {
+                println!("{}", &"RLS or Clippy failed to build for 7 days");
+                return;
             }
         } else if clippy_date < rls_date {
             if web_status[1].get(&clippy_present_last.to_owned()).unwrap() == "present" {
@@ -506,7 +507,7 @@ fn output_command_message(default_channel_name: &str, require_comp: &str) {
         println!("Not found component: \"{}\"", require_comp);
     } else {
         println!("{}", message.trim_end());
-        println!("OK");
+        println!("End");
     }
 }
 
