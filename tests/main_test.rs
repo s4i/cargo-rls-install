@@ -213,7 +213,7 @@ fn rust_install() {
     );
     if yes {
         println!("$ rustup install {}", v);
-        println!("OK");
+        println!("End");
     } else {
         println!("Command execution (y/n)");
         let buf = "YES".to_owned();
@@ -223,7 +223,7 @@ fn rust_install() {
             || buf.to_lowercase().trim() == "yes"
         {
             println!("$ rustup install {}", v);
-            println!("OK");
+            println!("End");
         } else {
             println!("Cancel");
             exit(0);
@@ -249,15 +249,15 @@ fn rls_install() {
     if yes {
         // rls install
         println!("$ rustup component add rls --toolchain {}", &v);
-        println!("OK");
+        println!("End");
 
         // rust-analysis install
         println!("$ rustup component add rust-analysis --toolchain {}", &v);
-        println!("OK");
+        println!("End");
 
         // rust-src install
         println!("$ rustup component add rust-src --toolchain {}", &v);
-        println!("OK");
+        println!("End");
     } else {
         println!("Command execution (y/n)");
         let buf = "YES".to_owned();
@@ -268,15 +268,15 @@ fn rls_install() {
         {
             // rls install
             println!("$ rustup component add rls --toolchain {}", &v);
-            println!("OK");
+            println!("End");
 
             // rust-analysis install
             println!("$ rustup component add rust-analysis --toolchain {}", &v);
-            println!("OK");
+            println!("End");
 
             // rust-src install
             println!("$ rustup component add rust-src --toolchain {}", &v);
-            println!("OK");
+            println!("End");
         } else {
             println!("Cancel");
             exit(0);
@@ -300,7 +300,7 @@ fn rust_set_default() {
 
     if yes {
         println!("$ rustup default {}", &v);
-        println!("OK");
+        println!("End");
     } else {
         println!("Command execution (y/n)");
         let buf = "YES".to_owned();
@@ -310,7 +310,7 @@ fn rust_set_default() {
             || buf.to_lowercase().trim() == "yes"
         {
             println!("$ rustup default {}", &v);
-            println!("OK");
+            println!("End");
         } else {
             println!("Cancel");
             exit(0);
