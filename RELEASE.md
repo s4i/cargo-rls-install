@@ -2,6 +2,7 @@
 
 | Date       | Version | Change                                                                                                                                                                    |
 | ---------- | ------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2020/03/28 | v2.0.4  | Add -i command. Add error pattern: RLS or Clippy build failed 7 days.                                                                                                     |
 | 2020/02/20 | v2.0.3  | When clippy was successfully built, it assumed that rls was also successfully built.<br>but because the assumption was wrong, it was modified to check both build status. |
 | 2019/12/04 | v2.0.2  | Always find the date.                                                                                                                                                     |
 | 2019/11/23 | v2.0.1  | use reqwest -> ureq                                                                                                                                                       |

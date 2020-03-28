@@ -48,10 +48,6 @@ cargo rls-install [FLAGS] [OPTIONS]
 
 ### Example1
 
-```bash
-cargo rls-install -n # --nightly
-```
-
 Three operations are executed by the above command.
 
 1. Rust Language(Nightly channel) install.
@@ -60,58 +56,66 @@ Three operations are executed by the above command.
 
 Before executing each operation, ask whether to execute it.
 
+```bash
+cargo rls-install -n # --nightly
+```
+
 ### Example2
+
+All operations are done without approval until the end.
 
 ```bash
 cargo rls-install -ny # --nightly --yes
 ```
 
-All operations are done without approval until the end.
-
 ### Example3
+
+Install Stable Rust, RLS and change the default toolchain.
 
 ```bash
 cargo rls-install -s # --stable
 ```
 
-Install Stable Rust and RLS and change the default toolchain.
-
 ### Example4
+
+Install Beta Rust, RLS and change the default toolchain.
 
 ```bash
 cargo rls-install -b # --beta
 ```
 
-Install Beta Rust and RLS and change the default toolchain.
-
 ### Example5
+
+Install RLS on all Rust channels.  
+_The default toolchain is Nightly Rust, as the last operation on Nightly Rust is done._
 
 ```bash
 cargo rls-install -ysbn
 ```
 
-Install RLS on all Rust channels.
-The default toolchain is Nightly Rust, as the last operation on Nightly Rust is done.
-
 ### Example6(v1.0.17-)
+
+Check the build status of Rust and RLS.  
+_This command is intended for use alone._
 
 ```bash
 cargo rls-install -v # --view
 ```
 
-Check the build status of Rust and RLS.
-This command is intended to be used only by itself.
-
 ### Example7(v1.0.23-)
 
+Installs the specified component. Use `rustup component add` command.
+
 ```bash
+# example: rustfmt
 cargo rls-install -f # --rustfmt
 cargo rls-install -c rustfmt # --component-add rustfmt
 ```
 
-Install component(example: rustfmt). Use `rustup component add` command.
-
 ### Example8(v1.0.25-)
+
+Changes the selected Rust channel to the default toolchain.  
+ _If you specify `cargo rls-instrall -d n`, Nightly Rust with the most recent date will be specified as the default toolchain._
 
 ```bash
 # Use stable
@@ -132,6 +136,8 @@ Change default toolchain. Use `rustup default` command.
 
 ### Example9(v1.0.28-)
 
+Delete the selected Rust channel.
+
 ```bash
 # Uninstall stable
 cargo rls-install -u s
@@ -150,15 +156,24 @@ cargo rls-install -u a # a or all
 Uninstall toolchain. Use `rustup uninstall` command.  
 Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.
 
+### Example9(v2.0.4-)
+
+Nightly Rust will be installed on the date you choose.
+
+```bash
+cargo rls-install -i nightly-2020-03-19
+```
+
 ## Flags
 
 ```bash
 USAGE:
-    cargo-rls-install.exe rls-install [FLAGS] [OPTIONS]
+    cargo rls-install [FLAGS] [OPTIONS]
 
 FLAGS:
     -b, --beta       Install beta channel Rust and RLS
     -h, --help       Prints help information
+    -i, --install    Install user specified target nightly channel
     -n, --nightly    Install nightly channel Rust and RLS
     -f, --rustfmt    Install rustfmt
     -s, --stable     Install stable channel Rust and RLS
@@ -167,7 +182,7 @@ FLAGS:
     -y, --yes        Pre-approval: Install Rust, RLS and change toolchain
 
 OPTIONS:
-    -c, --component-add <comp_add>           Wrapper(rustup component add)
+    -c, --component-add <component>          Wrapper(rustup component add)
     -d, --default-toolchain <default>        Wrapper(rustup default)
     -u, --uninstall-toolchain <uninstall>    Wrapper(rustup uninstall)
 ```

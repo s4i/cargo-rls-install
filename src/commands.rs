@@ -28,6 +28,17 @@ pub fn select_channel() -> std::result::Result<String, failure::Error> {
     Ok(buf.to_lowercase().trim().to_owned())
 }
 
+pub fn rust_and_rls_install(ch: &str, yes: bool) {
+    // Operation 1: Rust install
+    rust_install(&ch, yes);
+
+    // Operation 2: RLS install
+    rls_install(&ch, yes);
+
+    // Operation 3: Default setting
+    rust_set_default(&ch, yes);
+}
+
 pub fn print_rust_and_rls_install(
     ch: &str,
     yes: bool,
@@ -80,16 +91,13 @@ fn rust_install(channel: &str, yes: bool) {
 fn rls_install(channel: &str, yes: bool) {
     println!("\n   2. RLS installation commands:");
 
-    // rust-src install
+    // rls install
     if !yes {
-        println!(
-            "\n$ rustup component add rust-src --toolchain {}\n",
-            channel
-        );
+        println!("\n$ rustup component add rls --toolchain {}\n", channel);
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rust-src"),
+        Ok(()) => component_add(&channel, "rls"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -112,13 +120,16 @@ fn rls_install(channel: &str, yes: bool) {
         }
     }
 
-    // rls install
+    // rust-src install
     if !yes {
-        println!("\n$ rustup component add rls --toolchain {}\n", channel);
+        println!(
+            "\n$ rustup component add rust-src --toolchain {}\n",
+            channel
+        );
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rls"),
+        Ok(()) => component_add(&channel, "rust-src"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);

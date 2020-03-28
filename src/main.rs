@@ -1,7 +1,8 @@
 use cargo_rls_install::{
     commands::{
         command_rust_default, command_rust_multiple_uninstall, command_rust_uninstall,
-        component_add, component_add_and_get_output, print_rust_and_rls_install, select_channel,
+        component_add, component_add_and_get_output, print_rust_and_rls_install,
+        rust_and_rls_install, select_channel,
     },
     options::{help, parse_args, Channel},
     scraping::RustupCompenentsHistory,
@@ -17,9 +18,10 @@ fn main() {
     let o: Channel = parse_args();
 
     // Check if component name isn't empty
-    let comp_add_some = o.comp_add.is_some();
+    let comp_add_some = o.component.is_some();
     let rustup_default = o.default.is_some();
     let rustup_uninstall = o.uninstall.is_some();
+    let rustup_install = o.install.is_some();
 
     let re_channel = Regex::new(r"(default)").unwrap();
     let mut default_channel_name = String::new();
@@ -74,6 +76,16 @@ fn main() {
         nightly(o.yes);
     }
 
+    // User user specified channel
+    if rustup_install {
+        let toolchain = o.install.unwrap();
+        if toolchain.is_ascii() {
+            install_toolchain(&toolchain.to_lowercase(), o.yes);
+        } else {
+            println!("Nonexistent toolchain");
+        }
+    }
+
     // Default toolchain may have been changed
     for lt in installed_toolchains() {
         if re_channel.is_match(&lt) {
@@ -88,7 +100,7 @@ fn main() {
 
     // Wrapper "rustup component add"
     if comp_add_some {
-        let require_comp = o.comp_add.unwrap();
+        let require_comp = o.component.unwrap();
         if require_comp != "rustfmt" || !o.rustfmt {
             // Catch error message returned to stderr
             output_command_message(&default_channel_name, &require_comp);
@@ -125,9 +137,10 @@ fn main() {
         comp_add_some,
         rustup_default,
         rustup_uninstall,
+        rustup_install,
     ) {
         // Yes only
-        (true, false, false, false, false, false, false, false) => match select_channel() {
+        (true, false, false, false, false, false, false, false, false) => match select_channel() {
             // &*: String -> &str
             Ok(ch) => match &*ch {
                 "0" | "stable" | "0:stable" => {
@@ -153,13 +166,12 @@ fn main() {
                 println!("Cancel");
             }
         },
-        (false, false, false, false, false, false, false, false) => {
+        (false, false, false, false, false, false, false, false, false) => {
             help();
             println!("Please input option");
         }
         _ => (),
     }
-    println!("End");
 }
 
 fn view(default_toolchain: &str) {
@@ -512,11 +524,11 @@ fn output_command_message(default_channel_name: &str, require_comp: &str) {
 }
 
 fn change_defalt_toolchain(toolchain_name: &str) {
-    if toolchain_name.starts_with('s') {
+    if toolchain_name.starts_with('s') || toolchain_name == "stable" {
         command_rust_default("stable");
     } else if toolchain_name.starts_with("beta-") {
         command_rust_default(&toolchain_name);
-    } else if toolchain_name.starts_with('b') {
+    } else if toolchain_name.starts_with('b') || toolchain_name == "beta" {
         command_rust_default("beta");
     } else if toolchain_name == "nightly" {
         command_rust_default(&"nightly".to_owned());
@@ -565,7 +577,7 @@ fn uninstall_toolchain(toolchain_name: &str, default_channel_name: &str) {
         } else {
             println!("Currently set to default toolchain");
         }
-    } else if toolchain_name.starts_with('n') {
+    } else if toolchain_name == "n" || toolchain_name == "nightly" {
         command_rust_uninstall(&"nightly".to_owned());
     } else if toolchain_name == "a" || toolchain_name == "all" {
         uninstall_all_dated_nightly();
@@ -610,4 +622,26 @@ fn uninstall_all_dated_nightly() {
             command_rust_multiple_uninstall(uninstall_targets);
         }
     }
+}
+
+fn install_toolchain(toolchain_name: &str, yes: bool) {
+    let re_beta = Regex::new(r"^beta-\d{4}-\d{2}-\d{2}").unwrap();
+    let re_nightly = Regex::new(r"^nightly-\d{4}-\d{2}-\d{2}").unwrap();
+    let channel = if toolchain_name == "s" {
+        "stable".to_owned()
+    } else if toolchain_name == "b" {
+        "beta".to_owned()
+    } else if toolchain_name == "n" {
+        "nightly".to_owned()
+    } else if toolchain_name == "stable"
+        || toolchain_name == "beta"
+        || re_beta.is_match(toolchain_name)
+        || re_nightly.is_match(toolchain_name)
+    {
+        toolchain_name.to_owned()
+    } else {
+        println!("{}", &"Nonexistent toolchain");
+        return;
+    };
+    rust_and_rls_install(&channel, yes);
 }
