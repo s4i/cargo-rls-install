@@ -334,7 +334,11 @@ fn nightly(yes: bool) {
         let clippy_date: i32 = clippy_present_last.replace("-", "").parse().unwrap();
         let rls_date: i32 = rls_present_last.replace("-", "").parse().unwrap();
         if clippy_date >= rls_date {
-            if web_status[0].get(&rls_present_last.to_owned()).unwrap() == "present" {
+            if web_status[0]
+                .get(&rls_present_last.to_owned())
+                .expect("RLS or Clippy failed to build for 7 days")
+                == "present"
+            {
                 print_rust_and_rls_install(
                     &rls_present_last,
                     yes,
