@@ -80,33 +80,7 @@ fn rust_install(channel: &str, yes: bool) {
 fn rls_install(channel: &str, yes: bool) {
     println!("\n   2. RLS installation commands:");
 
-    if !yes {
-        println!("\n$ rustup component add rls --toolchain {}\n", channel);
-    }
-
-    match execution(yes) {
-        Ok(()) => component_add(&channel, "rls"), // rls install
-        Err(e) => {
-            println!("{:?}", e);
-            exit(1);
-        }
-    }
-
-    if !yes {
-        println!(
-            "\n$ rustup component add rust-analysis --toolchain {}\n",
-            channel
-        );
-    }
-
-    match execution(yes) {
-        Ok(()) => component_add(&channel, "rust-analysis"), // rust-analysis install
-        Err(e) => {
-            println!("{:?}", e);
-            exit(1);
-        }
-    }
-
+    // rust-src install
     if !yes {
         println!(
             "\n$ rustup component add rust-src --toolchain {}\n",
@@ -115,7 +89,36 @@ fn rls_install(channel: &str, yes: bool) {
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rust-src"), // rust-src install
+        Ok(()) => component_add(&channel, "rust-src"),
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+
+    // rust-analysis install
+    if !yes {
+        println!(
+            "\n$ rustup component add rust-analysis --toolchain {}\n",
+            channel
+        );
+    }
+
+    match execution(yes) {
+        Ok(()) => component_add(&channel, "rust-analysis"),
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+
+    // rls install
+    if !yes {
+        println!("\n$ rustup component add rls --toolchain {}\n", channel);
+    }
+
+    match execution(yes) {
+        Ok(()) => component_add(&channel, "rls"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -145,7 +148,7 @@ fn command_rust(channel: &str) {
         .args(&["install", channel])
         .status()
         .expect("Abort installation");
-    println!("OK");
+    println!("End");
 }
 
 pub fn component_add(channel: &str, component: &str) {
@@ -157,7 +160,7 @@ pub fn component_add(channel: &str, component: &str) {
         .args(&["component", "add", component, "--toolchain", channel])
         .status()
         .expect("Abort installation");
-    println!("OK");
+    println!("End");
 }
 
 pub fn component_add_and_get_output(channel: &str, component: &str) -> String {
@@ -179,7 +182,7 @@ pub fn command_rust_default(channel: &str) {
         .args(&["default", channel])
         .status()
         .expect("Abort installation");
-    println!("OK");
+    println!("End");
 }
 
 pub fn command_rust_uninstall(channel: &str) {
@@ -196,7 +199,7 @@ pub fn command_rust_uninstall(channel: &str) {
             exit(1);
         }
     }
-    println!("OK");
+    println!("End");
 }
 
 pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
@@ -223,5 +226,5 @@ pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
             exit(1);
         }
     }
-    println!("OK");
+    println!("End");
 }
