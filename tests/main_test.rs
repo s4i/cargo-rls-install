@@ -233,30 +233,28 @@ fn rust_install() {
 
 #[test]
 fn rls_install() {
-    let v = "nightly".to_owned();
     let yes = false;
 
     println!(
         r"
     2. RLS installation:
 
-        $ rustup component add rls --toolchain {}
-        $ rustup component add rust-analysis --toolchain {}
-        $ rustup component add rust-src --toolchain {}
-",
-        &v, &v, &v
+        $ rustup component add rls
+        $ rustup component add rust-analysis
+        $ rustup component add rust-src
+"
     );
     if yes {
         // rls install
-        println!("$ rustup component add rls --toolchain {}", &v);
+        println!("$ rustup component add rls");
         println!("End");
 
         // rust-analysis install
-        println!("$ rustup component add rust-analysis --toolchain {}", &v);
+        println!("$ rustup component add rust-analysis");
         println!("End");
 
         // rust-src install
-        println!("$ rustup component add rust-src --toolchain {}", &v);
+        println!("$ rustup component add rust-src");
         println!("End");
     } else {
         println!("Command execution (y/n)");
@@ -267,15 +265,15 @@ fn rls_install() {
             || buf.to_lowercase().trim() == "yes"
         {
             // rls install
-            println!("$ rustup component add rls --toolchain {}", &v);
+            println!("$ rustup component add rls");
             println!("End");
 
             // rust-analysis install
-            println!("$ rustup component add rust-analysis --toolchain {}", &v);
+            println!("$ rustup component add rust-analysis");
             println!("End");
 
             // rust-src install
-            println!("$ rustup component add rust-src --toolchain {}", &v);
+            println!("$ rustup component add rust-src");
             println!("End");
         } else {
             println!("Cancel");
