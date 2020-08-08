@@ -4,7 +4,7 @@ use cargo_rls_install::{
         component_add, component_add_and_get_output, print_rust_and_rls_install,
         rust_and_rls_install, select_channel,
     },
-    options::{help, parse_args, Channel},
+    options::{help, parse_args, Channel, SubCommandsEnum},
     scraping::RustupCompenentsHistory,
 };
 
@@ -13,8 +13,7 @@ use std::process::Command;
 use std::str;
 
 fn main() {
-    // Command line
-    // options.rs
+    // options.rs: Command line options
     let o: Channel = parse_args();
 
     // Check if component name isn't empty
@@ -23,12 +22,34 @@ fn main() {
     let rustup_uninstall = o.uninstall.is_some();
     let rustup_install = o.install.is_some();
 
-    let re_channel = Regex::new(r"(default)").unwrap();
     let mut default_channel_name = String::new();
+    let re_channel = Regex::new(r"(default)").unwrap();
 
     for lt in installed_toolchains() {
         if re_channel.is_match(&lt) {
-            default_channel_name = lt.replace(" (default)", "");
+            default_channel_name = lt.replace("(default)", "").trim().to_owned()
+        }
+    }
+
+    // let default_host = get_default_host();
+
+    if o.subcommands.is_some() {
+        let subcommands_value = o.subcommands.unwrap();
+        if subcommands_value == SubCommandsEnum::Show {
+            // show option
+            Command::new("rustup")
+                .arg("show")
+                .status()
+                .expect("Command Error");
+            println!("End");
+            return;
+        } else if subcommands_value == SubCommandsEnum::Formatter {
+            // Install clippy
+            component_add("clippy");
+            // Install rustfmt
+            component_add("rustfmt");
+            println!("End");
+            return;
         }
     }
 
@@ -39,12 +60,11 @@ fn main() {
             o.stable,
             o.beta,
             o.nightly,
-            o.rustfmt,
             comp_add_some,
             rustup_default,
             rustup_uninstall,
         ) {
-            (false, false, false, false, false, false, false, false) => view(&default_channel_name),
+            (false, false, false, false, false, false, false) => view(&default_channel_name),
             _ => println!("Invalid option"),
         }
         println!("End");
@@ -93,17 +113,15 @@ fn main() {
         }
     }
 
-    // Install rustfmt
-    if o.rustfmt {
-        component_add(&default_channel_name, "rustfmt");
-    }
-
     // Wrapper "rustup component add"
     if comp_add_some {
         let require_comp = o.component.unwrap();
-        if require_comp != "rustfmt" || !o.rustfmt {
-            // Catch error message returned to stderr
-            output_command_message(&default_channel_name, &require_comp);
+        // Catch error message returned to stderr
+        let message = component_add_and_get_output(&require_comp);
+        if message.starts_with("error") {
+            println!("Not found component: \"{}\"", require_comp);
+        } else {
+            println!("{}", message.trim_end());
         }
     }
 
@@ -133,45 +151,47 @@ fn main() {
         o.stable,
         o.beta,
         o.nightly,
-        o.rustfmt,
         comp_add_some,
         rustup_default,
         rustup_uninstall,
         rustup_install,
     ) {
         // Yes only
-        (true, false, false, false, false, false, false, false, false) => match select_channel() {
-            // &*: String -> &str
-            Ok(ch) => match &*ch {
-                "0" | "stable" | "0:stable" => {
-                    print_rust_and_rls_install(
-                        "stable",
-                        o.yes,
-                        false,
-                        default_channel_name.starts_with("stable-"),
-                    );
+        (true, false, false, false, false, false, false, false) => {
+            match select_channel() {
+                // &*: String -> &str
+                Ok(ch) => match &*ch {
+                    "0" | "stable" | "0:stable" => {
+                        print_rust_and_rls_install(
+                            "stable",
+                            o.yes,
+                            false,
+                            default_channel_name.starts_with("stable-"),
+                        );
+                    }
+                    "1" | "beta" | "1:beta" => {
+                        print_rust_and_rls_install(
+                            "beta",
+                            o.yes,
+                            false,
+                            default_channel_name.starts_with("beta-"),
+                        );
+                    }
+                    "2" | "nightly" | "2:nightly" => nightly(o.yes),
+                    _ => println!("No matches"),
+                },
+                Err(_e) => {
+                    println!("Cancel");
                 }
-                "1" | "beta" | "1:beta" => {
-                    print_rust_and_rls_install(
-                        "beta",
-                        o.yes,
-                        false,
-                        default_channel_name.starts_with("beta-"),
-                    );
-                }
-                "2" | "nightly" | "2:nightly" => nightly(o.yes),
-                _ => println!("No matches"),
-            },
-            Err(_e) => {
-                println!("Cancel");
             }
-        },
-        (false, false, false, false, false, false, false, false, false) => {
+        }
+        (false, false, false, false, false, false, false, false) => {
             help();
             println!("Please input option");
         }
         _ => (),
     }
+    println!("End");
 }
 
 fn view(default_toolchain: &str) {
@@ -346,8 +366,8 @@ fn nightly(yes: bool) {
         let clippy_date: i32 = clippy_present_last.replace("-", "").parse().unwrap();
         let rls_date: i32 = rls_present_last.replace("-", "").parse().unwrap();
         if clippy_date >= rls_date {
-            if web_status[0].get(&rls_present_last.to_owned()).is_some() {
-                if web_status[0].get(&rls_present_last.to_owned()).unwrap() == "present" {
+            if web_status[0].get(&rls_present_last).is_some() {
+                if web_status[0].get(&rls_present_last).unwrap() == "present" {
                     print_rust_and_rls_install(
                         &rls_present_last,
                         yes,
@@ -369,7 +389,7 @@ fn nightly(yes: bool) {
                 return;
             }
         } else if clippy_date < rls_date {
-            if web_status[1].get(&clippy_present_last.to_owned()).unwrap() == "present" {
+            if web_status[1].get(&clippy_present_last).unwrap() == "present" {
                 print_rust_and_rls_install(
                     &clippy_present_last,
                     yes,
@@ -495,10 +515,9 @@ fn platform(no_head: &str) -> String {
     re_date_plus_hyphen.replace(no_head, "").to_string() // matching. <YYYY-MM-DD>
 }
 
-pub fn installed_toolchains() -> Vec<String> {
+fn installed_toolchains() -> Vec<String> {
     let output = String::from_utf8(
         Command::new("rustup")
-            // .arg("show")
             .args(&["toolchain", "list"])
             .output()
             .expect("rustup show failed")
@@ -511,16 +530,6 @@ pub fn installed_toolchains() -> Vec<String> {
         .split('\n')
         .map(std::borrow::ToOwned::to_owned)
         .collect::<Vec<_>>()
-}
-
-fn output_command_message(default_channel_name: &str, require_comp: &str) {
-    let message = component_add_and_get_output(&default_channel_name, &require_comp);
-    if message.starts_with("error") {
-        println!("Not found component: \"{}\"", require_comp);
-    } else {
-        println!("{}", message.trim_end());
-        println!("End");
-    }
 }
 
 fn change_defalt_toolchain(toolchain_name: &str) {
@@ -645,3 +654,24 @@ fn install_toolchain(toolchain_name: &str, yes: bool) {
     };
     rust_and_rls_install(&channel, yes);
 }
+
+// fn get_default_host() -> String {
+//     let output = String::from_utf8(
+//         Command::new("rustup")
+//             .arg("show")
+//             .output()
+//             .expect("rustup show failed")
+//             .stdout,
+//     )
+//     .unwrap();
+
+//     let output_lines: Vec<String> = output
+//         .trim_end()
+//         .split('\n')
+//         .map(std::borrow::ToOwned::to_owned)
+//         .collect::<Vec<_>>();
+
+//     let vec: Vec<&str> = output_lines[0].split(':').collect();
+
+//     vec[1].trim().to_owned()
+// }

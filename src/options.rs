@@ -18,8 +18,6 @@ pub struct Channel {
     pub view: bool,
     #[structopt(short, long = "component-add", help = "Wrapper(rustup component add)")]
     pub component: Option<String>,
-    #[structopt(short = "f", long, help = "Install rustfmt")]
-    pub rustfmt: bool,
     #[structopt(
         short,
         long,
@@ -36,6 +34,16 @@ pub struct Channel {
     pub uninstall: Option<String>,
     #[structopt(short, long, help = "Install user specified target nightly channel")]
     pub install: Option<String>,
+    #[structopt(subcommand)]
+    pub subcommands: Option<SubCommandsEnum>,
+}
+
+#[derive(Debug, PartialEq, StructOpt)]
+pub enum SubCommandsEnum {
+    #[structopt(about = "Wrapper(rustup show)")]
+    Show,
+    #[structopt(about = "Install clippy and rustfmt")]
+    Formatter,
 }
 
 pub fn parse_args() -> Channel {
@@ -55,7 +63,6 @@ FLAGS:
     -h, --help       Prints help information
     -i, --install    Install user specified target nightly channel
     -n, --nightly    Install nightly channel Rust and RLS
-    -f, --rustfmt    Install rustfmt
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
     -v, --view       RLS build status view
@@ -65,6 +72,11 @@ OPTIONS:
     -c, --component-add <component>          Wrapper(rustup component add)
     -d, --default-toolchain <default>        Wrapper(rustup default)
     -u, --uninstall-toolchain <uninstall>    Wrapper(rustup uninstall)
-    "
+
+SUBCOMMANDS:
+    formatter    Install clippy and rustfmt
+    help         Prints this message or the help of the given subcommand(s)
+    show         Wrapper(rustup show)
+"
     );
 }

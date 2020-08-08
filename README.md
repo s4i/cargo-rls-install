@@ -108,14 +108,13 @@ Installs the specified component. Use `rustup component add` command.
 
 ```bash
 # example: rustfmt
-cargo rls-install -f # --rustfmt
 cargo rls-install -c rustfmt # --component-add rustfmt
 ```
 
 ### Example8(v1.0.25-)
 
-Changes the selected Rust channel to the default toolchain.  
- _If you specify `cargo rls-instrall -d n`, Nightly Rust with the most recent date will be specified as the default toolchain._
+Note: Changes the selected Rust channel to the default toolchain. Use `rustup default` command.
+_If you specify `cargo rls-instrall -d n`, Nightly Rust with the most recent date will be specified as the default toolchain._
 
 ```bash
 # Use stable
@@ -132,11 +131,10 @@ cargo rls-install -d n
 cargo rls-install -d nightly-2019-05-21
 ```
 
-Change default toolchain. Use `rustup default` command.
-
 ### Example9(v1.0.28-)
 
-Delete the selected Rust channel.
+Uninstall the selected Rust channel. Use `rustup uninstall` command.  
+Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.
 
 ```bash
 # Uninstall stable
@@ -153,15 +151,28 @@ cargo rls-install -u nightly-2019-5-21
 cargo rls-install -u a # a or all
 ```
 
-Uninstall toolchain. Use `rustup uninstall` command.  
-Note: Latest nightly rust and default toolchain isn't eligible for uninstallation.
-
 ### Example10(v2.0.4-)
 
 Nightly Rust will be installed on the date you choose.
 
 ```bash
 cargo rls-install -i nightly-2020-03-19
+```
+
+### Example11(v2.0.5-)
+
+Show installed toolchains. Use `rustup show` command.
+
+```bash
+cargo rls-install show
+```
+
+### Example12(v2.0.5-)
+
+Install formatter tools: clippy and rustfmt. Use `rustup component add` command.
+
+```bash
+cargo rls-install formatter
 ```
 
 ## Flags
@@ -175,7 +186,6 @@ FLAGS:
     -h, --help       Prints help information
     -i, --install    Install user specified target nightly channel
     -n, --nightly    Install nightly channel Rust and RLS
-    -f, --rustfmt    Install rustfmt
     -s, --stable     Install stable channel Rust and RLS
     -V, --version    Prints version information
     -v, --view       RLS build status view
@@ -185,6 +195,11 @@ OPTIONS:
     -c, --component-add <component>          Wrapper(rustup component add)
     -d, --default-toolchain <default>        Wrapper(rustup default)
     -u, --uninstall-toolchain <uninstall>    Wrapper(rustup uninstall)
+
+SUBCOMMANDS:
+    formatter    Install clippy and rustfmt
+    help         Prints this message or the help of the given subcommand(s)
+    show         Wrapper(rustup show)
 ```
 
 ## Special thanks

@@ -3,7 +3,6 @@ use select::predicate::{Attr, Name};
 use std::collections::BTreeMap;
 use std::io::Read;
 use std::result::Result;
-use ureq;
 
 // Trait: RustupCompenentsHistory
 // Arg: URL

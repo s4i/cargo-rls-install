@@ -30,13 +30,13 @@ pub fn select_channel() -> std::result::Result<String, failure::Error> {
 
 pub fn rust_and_rls_install(ch: &str, yes: bool) {
     // Operation 1: Rust install
-    rust_install(&ch, yes);
+    rust_install(ch, yes);
 
     // Operation 2: RLS install
-    rls_install(&ch, yes);
+    rls_install(yes);
 
     // Operation 3: Default setting
-    rust_set_default(&ch, yes);
+    rust_set_default(ch, yes);
 }
 
 pub fn print_rust_and_rls_install(
@@ -47,7 +47,7 @@ pub fn print_rust_and_rls_install(
 ) {
     let channel = if ch == "stable" || ch == "beta" {
         println!("\n * Requested Rust channel: {}", ch);
-        ch.to_owned()
+        ch
     } else {
         // YYYY-MM-DD
         println!("\n * Recommended Nightly Rust: {}", ch);
@@ -58,17 +58,17 @@ pub fn print_rust_and_rls_install(
     if skip_rust_install {
         println!("\n   1. Rust version: OK({} installed)", channel);
     } else {
-        rust_install(&channel, yes);
+        rust_install(channel, yes);
     }
 
     // Operation 2: RLS install
-    rls_install(&channel, yes);
+    rls_install(yes);
 
     // Operation 3: Default setting
     if skip_default_setting {
         println!("\n   3. Set default: Already set\n");
     } else {
-        rust_set_default(&channel, yes);
+        rust_set_default(channel, yes);
     }
 }
 
@@ -80,7 +80,13 @@ fn rust_install(channel: &str, yes: bool) {
     }
 
     match execution(yes) {
-        Ok(()) => command_rust(&channel),
+        Ok(()) => {
+            println!("$ rustup install {}", channel);
+            Command::new("rustup")
+                .args(&["install", channel])
+                .status()
+                .expect("Abort installation");
+        }
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -88,16 +94,16 @@ fn rust_install(channel: &str, yes: bool) {
     }
 }
 
-fn rls_install(channel: &str, yes: bool) {
+fn rls_install(yes: bool) {
     println!("\n   2. RLS installation commands:");
 
     // rls install
     if !yes {
-        println!("\n$ rustup component add rls --toolchain {}\n", channel);
+        println!("\n$ rustup component add rls\n");
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rls"),
+        Ok(()) => component_add("rls"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -106,14 +112,11 @@ fn rls_install(channel: &str, yes: bool) {
 
     // rust-analysis install
     if !yes {
-        println!(
-            "\n$ rustup component add rust-analysis --toolchain {}\n",
-            channel
-        );
+        println!("\n$ rustup component add rust-analysis\n");
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rust-analysis"),
+        Ok(()) => component_add("rust-analysis"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -122,14 +125,11 @@ fn rls_install(channel: &str, yes: bool) {
 
     // rust-src install
     if !yes {
-        println!(
-            "\n$ rustup component add rust-src --toolchain {}\n",
-            channel
-        );
+        println!("\n$ rustup component add rust-src\n");
     }
 
     match execution(yes) {
-        Ok(()) => component_add(&channel, "rust-src"),
+        Ok(()) => component_add("rust-src"),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
@@ -153,34 +153,20 @@ fn rust_set_default(channel: &str, yes: bool) {
     }
 }
 
-fn command_rust(channel: &str) {
-    println!("$ rustup install {}", channel);
+pub fn component_add(component: &str) {
+    println!("\n$ rustup component add {}", component);
+
     Command::new("rustup")
-        .args(&["install", channel])
+        .args(&["component", "add", component])
         .status()
         .expect("Abort installation");
-    println!("End");
 }
 
-pub fn component_add(channel: &str, component: &str) {
-    println!(
-        "\n$ rustup component add {} --toolchain {}",
-        component, channel
-    );
-    Command::new("rustup")
-        .args(&["component", "add", component, "--toolchain", channel])
-        .status()
-        .expect("Abort installation");
-    println!("End");
-}
+pub fn component_add_and_get_output(component: &str) -> String {
+    println!("\n$ rustup component add {}", component);
 
-pub fn component_add_and_get_output(channel: &str, component: &str) -> String {
-    println!(
-        "\n$ rustup component add {} --toolchain {}",
-        component, channel
-    );
     let output = Command::new("rustup")
-        .args(&["component", "add", component, "--toolchain", channel])
+        .args(&["component", "add", component])
         .output()
         .expect("Abort installation");
 
@@ -193,7 +179,6 @@ pub fn command_rust_default(channel: &str) {
         .args(&["default", channel])
         .status()
         .expect("Abort installation");
-    println!("End");
 }
 
 pub fn command_rust_uninstall(channel: &str) {
@@ -210,7 +195,6 @@ pub fn command_rust_uninstall(channel: &str) {
             exit(1);
         }
     }
-    println!("End");
 }
 
 pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
@@ -237,5 +221,4 @@ pub fn command_rust_multiple_uninstall(dated_nightly: Vec<String>) {
             exit(1);
         }
     }
-    println!("End");
 }
