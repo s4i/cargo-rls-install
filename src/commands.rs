@@ -45,9 +45,9 @@ pub fn print_rust_and_rls_install(
     skip_rust_install: bool,
     skip_default_setting: bool,
 ) {
-    let channel = if ch == "stable" || ch == "beta" {
+    let channel: String = if ch == "stable" || ch == "beta" {
         println!("\n * Requested Rust channel: {}", ch);
-        ch
+        ch.to_owned()
     } else {
         // YYYY-MM-DD
         println!("\n * Recommended Nightly Rust: {}", ch);
@@ -58,7 +58,7 @@ pub fn print_rust_and_rls_install(
     if skip_rust_install {
         println!("\n   1. Rust version: OK({} installed)", channel);
     } else {
-        rust_install(channel, yes);
+        rust_install(&channel, yes);
     }
 
     // Operation 2: RLS install
@@ -68,7 +68,7 @@ pub fn print_rust_and_rls_install(
     if skip_default_setting {
         println!("\n   3. Set default: Already set\n");
     } else {
-        rust_set_default(channel, yes);
+        rust_set_default(&channel, yes);
     }
 }
 
