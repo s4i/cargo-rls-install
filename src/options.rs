@@ -44,6 +44,8 @@ pub enum SubCommandsEnum {
     Show,
     #[structopt(about = "Install clippy and rustfmt")]
     Formatter,
+    #[structopt(about = "RLS build status view")]
+    View,
 }
 
 pub fn parse_args() -> Channel {
@@ -77,6 +79,7 @@ SUBCOMMANDS:
     formatter    Install clippy and rustfmt
     help         Prints this message or the help of the given subcommand(s)
     show         Wrapper(rustup show)
+    view         RLS build status view
 "
     );
 }

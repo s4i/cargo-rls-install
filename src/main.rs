@@ -27,30 +27,32 @@ fn main() {
 
     for lt in installed_toolchains() {
         if re_channel.is_match(&lt) {
-            default_channel_name = lt.replace("(default)", "").trim().to_owned()
+            default_channel_name = lt;
         }
     }
 
     // let default_host = get_default_host();
 
+    // Exec subcommands
     if o.subcommands.is_some() {
-        let subcommands_value = o.subcommands.unwrap();
-        if subcommands_value == SubCommandsEnum::Show {
+        let subcommands_value = o.subcommands.as_ref().unwrap();
+        if subcommands_value == &SubCommandsEnum::Show {
             // show option
             Command::new("rustup")
                 .arg("show")
                 .status()
                 .expect("Command Error");
-            println!("End");
-            return;
-        } else if subcommands_value == SubCommandsEnum::Formatter {
+        } else if subcommands_value == &SubCommandsEnum::Formatter {
             // Install clippy
             component_add("clippy");
             // Install rustfmt
             component_add("rustfmt");
-            println!("End");
-            return;
+        } else if subcommands_value == &SubCommandsEnum::View {
+            // view option
+            view(&default_channel_name);
         }
+        println!("End");
+        return;
     }
 
     // view option
@@ -109,7 +111,7 @@ fn main() {
     // Default toolchain may have been changed
     for lt in installed_toolchains() {
         if re_channel.is_match(&lt) {
-            default_channel_name = lt.replace(" (default)", "");
+            default_channel_name = lt
         }
     }
 
@@ -528,7 +530,9 @@ fn installed_toolchains() -> Vec<String> {
     output
         .trim_end()
         .split('\n')
-        .map(std::borrow::ToOwned::to_owned)
+        .map(|x| x.replace("(default)", ""))
+        .map(|x| x.replace("(override)", ""))
+        .map(|x| x.trim().to_owned())
         .collect::<Vec<_>>()
 }
 
@@ -545,12 +549,7 @@ fn change_defalt_toolchain(toolchain_name: &str) {
         command_rust_default(&toolchain_name);
     } else if toolchain_name.starts_with('n') {
         let get_tail_toolchain = installed_toolchains();
-        command_rust_default(
-            &get_tail_toolchain
-                .last()
-                .unwrap_or(&"nightly".to_owned())
-                .replace(" (default)", ""),
-        );
+        command_rust_default(&get_tail_toolchain.last().unwrap_or(&"nightly".to_owned()));
     } else {
         println!("Not found toolchain: \"{}\"", toolchain_name);
     }

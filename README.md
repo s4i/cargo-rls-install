@@ -100,6 +100,8 @@ _This command is intended for use alone._
 
 ```bash
 cargo rls-install -v # --view
+        # or
+cargo rls-install view # v2.0.6-
 ```
 
 ### Example7(v1.0.23-)
@@ -200,6 +202,7 @@ SUBCOMMANDS:
     formatter    Install clippy and rustfmt
     help         Prints this message or the help of the given subcommand(s)
     show         Wrapper(rustup show)
+    view         RLS build status view
 ```
 
 ## Special thanks

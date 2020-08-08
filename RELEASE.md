@@ -2,7 +2,8 @@
 
 | Date       | Version | Change                                                                                                                                                                    |
 | ---------- | ------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2020/08/08 | v2.0.5  | Remove -f option. Add show(rustup show command wrapper) and formatter(clippy and rustfmt install) subcommands.                                                            |
+| 2020/08/08 | v2.0.6  | Add view subcommands(Same movement as -v option).                                                                                                                         |
+| 2020/08/08 | v2.0.5  | Remove -f option.<br>Add show(rustup show command wrapper) and formatter(clippy and rustfmt install) subcommands.                                                         |
 | 2020/03/29 | v2.0.4  | Add -i command. Add error pattern: RLS or Clippy build failed 7 days.                                                                                                     |
 | 2020/02/20 | v2.0.3  | When clippy was successfully built, it assumed that rls was also successfully built.<br>but because the assumption was wrong, it was modified to check both build status. |
 | 2019/12/04 | v2.0.2  | Always find the date.                                                                                                                                                     |
