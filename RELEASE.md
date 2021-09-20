@@ -2,6 +2,7 @@
 
 | Date       | Version | Change                                                                                                                                                                    |
 | ---------- | ------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2021/09/10 | v2.0.7  | Change process order: Setting Rust default and install RLS.                                                                                                               |
 | 2020/08/08 | v2.0.6  | Add view subcommands(Same movement as -v option).                                                                                                                         |
 | 2020/08/08 | v2.0.5  | Remove -f option.<br>Add show(rustup show command wrapper) and formatter(clippy and rustfmt install) subcommands.                                                         |
 | 2020/03/29 | v2.0.4  | Add -i command. Add error pattern: RLS or Clippy build failed 7 days.                                                                                                     |
