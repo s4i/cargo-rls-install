@@ -51,8 +51,8 @@ cargo rls-install [FLAGS] [OPTIONS]
 Three operations are executed by the above command.
 
 1. Rust Language(Nightly channel) install.
-2. RLS(Rust Language Server) install.
-3. Change default toolchain.
+2. Change default toolchain.
+3. RLS(Rust Language Server) install.
 
 Before executing each operation, ask whether to execute it.
 

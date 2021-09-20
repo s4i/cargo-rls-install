@@ -31,8 +31,6 @@ fn main() {
         }
     }
 
-    // let default_host = get_default_host();
-
     // Exec subcommands
     if o.subcommands.is_some() {
         let subcommands_value = o.subcommands.as_ref().unwrap();
@@ -653,24 +651,3 @@ fn install_toolchain(toolchain_name: &str, yes: bool) {
     };
     rust_and_rls_install(&channel, yes);
 }
-
-// fn get_default_host() -> String {
-//     let output = String::from_utf8(
-//         Command::new("rustup")
-//             .arg("show")
-//             .output()
-//             .expect("rustup show failed")
-//             .stdout,
-//     )
-//     .unwrap();
-
-//     let output_lines: Vec<String> = output
-//         .trim_end()
-//         .split('\n')
-//         .map(std::borrow::ToOwned::to_owned)
-//         .collect::<Vec<_>>();
-
-//     let vec: Vec<&str> = output_lines[0].split(':').collect();
-
-//     vec[1].trim().to_owned()
-// }

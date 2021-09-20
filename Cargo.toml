@@ -1,6 +1,6 @@
 [package]
 name = "cargo-rls-install"
-version = "2.0.6"
+version = "2.0.7"
 authors = ["s4i"]
 edition = "2018"
 license = "MIT"
@@ -12,7 +12,7 @@ keywords = ["cli", "cargo", "subcommand", "rls", "language-server"]
 include = ["/Cargo.toml", "/LICENSE", "/README.md", "/RELEASE.md", "/src/*.rs"]
 
 [dependencies]
-ureq = "1.3.0"
+ureq = "1.5.1"
 regex = "1.3.9"
 select = "0.5.0"
 structopt = "0.3.16"

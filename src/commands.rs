@@ -32,11 +32,11 @@ pub fn rust_and_rls_install(ch: &str, yes: bool) {
     // Operation 1: Rust install
     rust_install(ch, yes);
 
-    // Operation 2: RLS install
-    rls_install(yes);
-
-    // Operation 3: Default setting
+    // Operation 2: Default setting
     rust_set_default(ch, yes);
+
+    // Operation 3: RLS install
+    rls_install(yes);
 }
 
 pub fn print_rust_and_rls_install(
@@ -61,15 +61,15 @@ pub fn print_rust_and_rls_install(
         rust_install(&channel, yes);
     }
 
-    // Operation 2: RLS install
-    rls_install(yes);
-
-    // Operation 3: Default setting
+    // Operation 2: Default setting
     if skip_default_setting {
-        println!("\n   3. Set default: Already set\n");
+        println!("\n   2. Set default: Already set\n");
     } else {
         rust_set_default(&channel, yes);
     }
+
+    // Operation 3: RLS install
+    rls_install(yes);
 }
 
 fn rust_install(channel: &str, yes: bool) {
@@ -94,8 +94,24 @@ fn rust_install(channel: &str, yes: bool) {
     }
 }
 
+fn rust_set_default(channel: &str, yes: bool) {
+    println!("\n   2. Set default:\n");
+
+    if !yes {
+        println!("$ rustup default {}\n", channel);
+    }
+
+    match execution(yes) {
+        Ok(()) => command_rust_default(&channel),
+        Err(e) => {
+            println!("{:?}", e);
+            exit(1);
+        }
+    }
+}
+
 fn rls_install(yes: bool) {
-    println!("\n   2. RLS installation commands:");
+    println!("\n   3. RLS installation commands:");
 
     // rls install
     if !yes {
@@ -130,22 +146,6 @@ fn rls_install(yes: bool) {
 
     match execution(yes) {
         Ok(()) => component_add("rust-src"),
-        Err(e) => {
-            println!("{:?}", e);
-            exit(1);
-        }
-    }
-}
-
-fn rust_set_default(channel: &str, yes: bool) {
-    println!("\n   3. Set default:\n");
-
-    if !yes {
-        println!("$ rustup default {}\n", channel);
-    }
-
-    match execution(yes) {
-        Ok(()) => command_rust_default(&channel),
         Err(e) => {
             println!("{:?}", e);
             exit(1);
