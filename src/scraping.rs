@@ -8,26 +8,25 @@ use std::result::Result;
 // Arg: URL
 // HTML(table tag) scraping
 pub trait RustupCompenentsHistory {
-    fn rustup_components_history(&self) -> Result<Vec<BTreeMap<String, String>>, std::io::Error>;
-    fn scraping(document: &Document) -> Vec<BTreeMap<String, String>>;
+    fn rustup_components_history(&self) -> Result<Vec<BTreeMap<String, String>>, ureq::Error>;
+    fn scraping(document: Document) -> Vec<BTreeMap<String, String>>;
 }
 
 impl RustupCompenentsHistory for &str {
-    fn rustup_components_history(&self) -> Result<Vec<BTreeMap<String, String>>, std::io::Error> {
+    fn rustup_components_history(&self) -> Result<Vec<BTreeMap<String, String>>, ureq::Error> {
         let url = self as &str;
-        let resp = ureq::get(url).call();
-        let mut buf = vec![];
-        if resp.ok() {
-            resp.into_reader().read_to_end(&mut buf)?;
-        }
-
+        let resp = ureq::get(url).call()?;
+        let mut bytes = Vec::new();
+        resp.into_reader()
+            .take(10_000_000)
+            .read_to_end(&mut bytes)?;
         // Get rls, clippy status row
-        Ok(Self::scraping(&Document::from(
-            String::from_utf8(buf).unwrap().as_str(),
+        Ok(Self::scraping(Document::from(
+            String::from_utf8(bytes).unwrap().as_str(),
         )))
     }
 
-    fn scraping(document: &Document) -> Vec<BTreeMap<String, String>> {
+    fn scraping(document: Document) -> Vec<BTreeMap<String, String>> {
         let mut rls_map = BTreeMap::new();
         let mut clippy_map = BTreeMap::new();
 
